@@ -24,7 +24,7 @@ export default async function DashboardLayout({
     .single()
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="flex h-screen bg-background">
       <DashboardSidebar userRole={userData?.role ?? 'staff'} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <DashboardHeader user={userData} />

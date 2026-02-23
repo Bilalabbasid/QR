@@ -25,7 +25,7 @@ export default async function BillingPage() {
         <div className="p-6 space-y-6">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Billing</h1>
-                <p className="text-slate-500 dark:text-slate-400">
+                <p className="text-muted-foreground">
                     Manage your subscription plan and billing information.
                 </p>
             </div>
@@ -34,18 +34,18 @@ export default async function BillingPage() {
                 <Card className="lg:col-span-2">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <CreditCard className="h-5 w-5 text-blue-600" />
+                            <CreditCard className="h-5 w-5 text-primary" />
                             Current Plan
                         </CardTitle>
                         <CardDescription>Details about your active subscription</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="flex items-start justify-between p-6 border rounded-xl bg-slate-50/50 dark:bg-slate-900/50">
+                        <div className="flex items-start justify-between p-6 border border-border rounded-xl bg-secondary/30">
                             <div className="space-y-4">
                                 <div className="space-y-1">
                                     <Badge variant="success" className="mb-2">Active</Badge>
                                     <h3 className="text-2xl font-bold capitalize">{biz.subscription_plan} Plan</h3>
-                                    <p className="text-sm text-slate-500">Perfect for growing businesses managing multiple locations.</p>
+                                    <p className="text-sm text-muted-foreground">Perfect for growing businesses managing multiple locations.</p>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="flex items-center gap-2 text-sm">
@@ -67,18 +67,18 @@ export default async function BillingPage() {
                                 </div>
                             </div>
                             <div className="text-right">
-                                <p className="text-3xl font-bold">$29<span className="text-sm font-normal text-slate-500">/mo</span></p>
+                                <p className="text-3xl font-bold">$29<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
                                 <Button variant="outline" size="sm" className="mt-4">Change Plan</Button>
                             </div>
                         </div>
 
                         <div className="mt-8 space-y-4">
                             <h4 className="text-sm font-semibold">Payment Method</h4>
-                            <div className="flex items-center gap-4 p-4 border rounded-lg">
-                                <div className="h-10 w-14 bg-slate-100 dark:bg-slate-800 rounded flex items-center justify-center font-bold text-xs italic">VISA</div>
+                            <div className="flex items-center gap-4 p-4 border border-border rounded-lg">
+                                <div className="h-10 w-14 bg-secondary rounded flex items-center justify-center font-bold text-xs italic">VISA</div>
                                 <div className="flex-1">
                                     <p className="text-sm font-medium">•••• •••• •••• 4242</p>
-                                    <p className="text-xs text-slate-500">Expires 12/26</p>
+                                    <p className="text-xs text-muted-foreground">Expires 12/26</p>
                                 </div>
                                 <Button variant="link" size="sm">Update</Button>
                             </div>
@@ -87,13 +87,13 @@ export default async function BillingPage() {
                 </Card>
 
                 <div className="space-y-6">
-                    <Card className="bg-gradient-to-br from-blue-600 to-blue-700 text-white border-none shadow-lg">
+                    <Card className="bg-primary text-primary-foreground border-none shadow-lg">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-white">
-                                <Zap className="h-5 w-5 fill-white" />
+                            <CardTitle className="flex items-center gap-2 text-primary-foreground">
+                                <Zap className="h-5 w-5 fill-primary-foreground" />
                                 Upgrade to Pro
                             </CardTitle>
-                            <CardDescription className="text-blue-100">Unlock advanced features for large scale operations.</CardDescription>
+                            <CardDescription className="text-primary-foreground/70">Unlock advanced features for large scale operations.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <ul className="space-y-2 text-sm">
@@ -110,7 +110,7 @@ export default async function BillingPage() {
                                     Priority API Access
                                 </li>
                             </ul>
-                            <Button className="w-full bg-white text-blue-600 hover:bg-blue-50">Go Pro</Button>
+                            <Button className="w-full bg-background text-foreground hover:bg-secondary">Go Pro</Button>
                         </CardContent>
                     </Card>
 
@@ -119,7 +119,7 @@ export default async function BillingPage() {
                             <CardTitle className="text-sm">Billing Support</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-xs text-slate-500 mb-4">Have questions about your invoice? Our team is here to help.</p>
+                            <p className="text-xs text-muted-foreground mb-4">Have questions about your invoice? Our team is here to help.</p>
                             <Button variant="outline" size="sm" className="w-full">Contact Support</Button>
                         </CardContent>
                     </Card>

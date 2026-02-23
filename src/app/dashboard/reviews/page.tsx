@@ -35,13 +35,12 @@ export default async function ReviewsPage({
     const cursor = typeof searchParams.cursor === 'string' ? searchParams.cursor : undefined
     const PAGE_SIZE = 25
 
-    // Fetch reviews via branches to enforce tenant isolation
     let query = supabase
         .from('reviews')
         .select('*, branches!inner(*)')
         .eq('branches.business_id', userData.business_id)
         .order('review_time', { ascending: false })
-        .limit(PAGE_SIZE + 1) // Fetch one extra to check if there is a next page
+        .limit(PAGE_SIZE + 1)
 
     if (cursor) {
         query = query.lt('review_time', cursor)
@@ -59,12 +58,12 @@ export default async function ReviewsPage({
         <div className="p-6 space-y-6">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Reviews</h1>
-                <p className="text-slate-500 dark:text-slate-400">
+                <p className="text-muted-foreground">
                     Manage and respond to all your Google Business Profile reviews.
                 </p>
             </div>
 
-            <div className="rounded-md border border-slate-200 dark:border-slate-800">
+            <div className="rounded-md border border-border">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -93,8 +92,8 @@ export default async function ReviewsPage({
                                     </div>
                                 </TableCell>
                                 <TableCell className="max-w-[400px]">
-                                    <p className="truncate text-slate-600 dark:text-slate-400" title={review.review_text || ''}>
-                                        {review.review_text || <span className="italic text-slate-400">No comment</span>}
+                                    <p className="truncate text-muted-foreground" title={review.review_text || ''}>
+                                        {review.review_text || <span className="italic text-muted-foreground">No comment</span>}
                                     </p>
                                 </TableCell>
                                 <TableCell>
@@ -121,7 +120,7 @@ export default async function ReviewsPage({
                         ))}
                         {displayReviews?.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={7} className="h-24 text-center text-slate-500">
+                                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                                     No reviews found.
                                 </TableCell>
                             </TableRow>
@@ -131,7 +130,7 @@ export default async function ReviewsPage({
             </div>
 
             <div className="flex items-center justify-between">
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted-foreground">
                     Showing {displayReviews?.length || 0} reviews
                 </p>
                 <div className="flex gap-2">

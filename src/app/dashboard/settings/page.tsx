@@ -2,20 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch' // I'll search for this or implement a quick version
-import { Settings as SettingsIcon, Building2, Bell, Google, Sparkles } from 'lucide-react'
-
-// Simple Switch implementation since it's not in UI yet
-const CustomSwitch = ({ checked, label }: { checked: boolean; label: string }) => (
-    <div className="flex items-center justify-between py-3 border-b last:border-0 border-slate-100 dark:border-slate-800">
-        <div className="flex flex-col">
-            <span className="text-sm font-medium">{label}</span>
-        </div>
-        <div className={`w-10 h-5 rounded-full relative transition-colors ${checked ? 'bg-blue-600' : 'bg-slate-300'}`}>
-            <div className={`absolute top-0.5 h-4 w-4 bg-white rounded-full transition-all ${checked ? 'left-5.5' : 'left-0.5'}`} />
-        </div>
-    </div>
-)
+import { Building2, Bell, Sparkles } from 'lucide-react'
+import { ConnectGoogleButton } from '@/components/dashboard/connect-google-button'
 
 export default async function SettingsPage() {
     const supabase = createClient()
@@ -23,21 +11,30 @@ export default async function SettingsPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/auth/login')
 
-    const { data: business } = await supabase
+    const { data: userData } = await supabase
         .from('users')
         .select('*, businesses(*)')
         .eq('id', user.id)
         .single()
 
-    if (!business?.businesses) redirect('/onboarding')
+    if (!userData?.businesses) redirect('/onboarding')
 
-    const biz = business.businesses
+    const biz = userData.businesses
+    const role = userData.role
+
+    const { data: googleToken } = await supabase
+        .from('google_tokens')
+        .select('google_account_id')
+        .eq('business_id', biz.id)
+        .maybeSingle()
+
+    const isGoogleConnected = !!googleToken
 
     return (
         <div className="p-6 space-y-6">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-                <p className="text-slate-500 dark:text-slate-400">
+                <p className="text-muted-foreground">
                     Manage your business configurations and core preferences.
                 </p>
             </div>
@@ -46,7 +43,7 @@ export default async function SettingsPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <Building2 className="h-5 w-5 text-slate-500" />
+                            <Building2 className="h-5 w-5 text-muted-foreground" />
                             Business Profile
                         </CardTitle>
                         <CardDescription>Core details about your organization</CardDescription>
@@ -54,26 +51,41 @@ export default async function SettingsPage() {
                     <CardContent className="space-y-4">
                         <div className="grid gap-2">
                             <label className="text-sm font-medium">Business Name</label>
-                            <div className="p-2 border rounded bg-slate-50 dark:bg-slate-800 dark:border-slate-700">{biz.name}</div>
+                            <div className="p-2 border border-border rounded bg-secondary">
+                                {biz.name}
+                            </div>
                         </div>
-                        <div className="grid gap-2 text-xs text-slate-500 italic">
-                            Subscription Plan: <span className="capitalize font-semibold text-blue-600">{biz.subscription_plan}</span>
+                        <div className="text-xs text-muted-foreground italic">
+                            Subscription Plan:{' '}
+                            <span className="capitalize font-semibold text-primary">
+                                {biz.subscription_plan}
+                            </span>
                         </div>
                     </CardContent>
                 </Card>
-                {['owner', 'manager'].includes(business.role) && (
+
+                {['owner', 'manager'].includes(role) && (
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <Sparkles className="h-5 w-5 text-purple-500" />
-                                AI & Automation
+                                <Sparkles className="h-5 w-5 text-primary" />
+                                AI &amp; Automation
                             </CardTitle>
                             <CardDescription>Configure how review analysis behaves</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                            <CustomSwitch label="Enable Auto-Replies" checked={biz.auto_reply_enabled || false} />
-                            <CustomSwitch label="Analyze Sentiment Automatically" checked={true} />
-                            <CustomSwitch label="Extract Topic Tags" checked={true} />
+                            <div className="flex items-center justify-between py-3 border-b border-border">
+                                <span className="text-sm font-medium">Enable Auto-Replies</span>
+                                <div className={`w-10 h-5 rounded-full relative ${biz.auto_reply_enabled ? 'bg-primary' : 'bg-secondary'}`}>
+                                    <div className={`absolute top-0.5 h-4 w-4 bg-white rounded-full transition-all ${biz.auto_reply_enabled ? 'left-[22px]' : 'left-0.5'}`} />
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between py-3 border-b border-border">
+                                <span className="text-sm font-medium">Analyze Sentiment Automatically</span>
+                                <div className="w-10 h-5 rounded-full relative bg-primary">
+                                    <div className="absolute top-0.5 left-[22px] h-4 w-4 bg-white rounded-full" />
+                                </div>
+                            </div>
                             <div className="pt-4">
                                 <Button size="sm" variant="outline" className="w-full">Adjust Thresholds</Button>
                             </div>
@@ -81,28 +93,19 @@ export default async function SettingsPage() {
                     </Card>
                 )}
 
-                {business.role === 'owner' && (
+                {role === 'owner' && (
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                Google Connection
-                            </CardTitle>
-                            <CardDescription>Manage your Google Business Profile authentication</CardDescription>
+                            <CardTitle>Google Business Connection</CardTitle>
+                            <CardDescription>
+                                Manage your Google Business Profile authentication
+                            </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between p-4 border rounded-lg bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-900/50">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center border shadow-sm shrink-0">
-                                        <span className="font-bold text-red-500 text-xl font-google">G</span>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-semibold">Google Account Connected</p>
-                                        <p className="text-xs text-slate-500">Reviews are syncing automatically</p>
-                                    </div>
-                                </div>
-                                <Badge variant="success">Healthy</Badge>
-                            </div>
-                            <Button variant="outline" size="sm" className="w-full">Reconnect Account</Button>
+                        <CardContent>
+                            <ConnectGoogleButton
+                                isConnected={isGoogleConnected}
+                                googleAccountId={googleToken?.google_account_id}
+                            />
                         </CardContent>
                     </Card>
                 )}
@@ -116,9 +119,24 @@ export default async function SettingsPage() {
                         <CardDescription>How and when you want to be alerted</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                        <CustomSwitch label="Daily Summary Email" checked={true} />
-                        <CustomSwitch label="Critical Rating Alerts (Email)" checked={true} />
-                        <CustomSwitch label="New Review Push Notifications" checked={false} />
+                        <div className="flex items-center justify-between py-3 border-b border-border">
+                            <span className="text-sm font-medium">Daily Summary Email</span>
+                            <div className="w-10 h-5 rounded-full relative bg-primary">
+                                <div className="absolute top-0.5 left-[22px] h-4 w-4 bg-white rounded-full" />
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between py-3 border-b border-border">
+                            <span className="text-sm font-medium">Critical Rating Alerts (Email)</span>
+                            <div className="w-10 h-5 rounded-full relative bg-primary">
+                                <div className="absolute top-0.5 left-[22px] h-4 w-4 bg-white rounded-full" />
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between py-3 border-border">
+                            <span className="text-sm font-medium">New Review Push Notifications</span>
+                            <div className="w-10 h-5 rounded-full relative bg-secondary">
+                                <div className="absolute top-0.5 left-0.5 h-4 w-4 bg-white rounded-full" />
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

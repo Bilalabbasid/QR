@@ -39,13 +39,13 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
     .slice(0, 2)
 
   return (
-    <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-4 px-6">
+    <header className="h-16 border-b border-border bg-card flex items-center gap-4 px-6">
       <div className="flex-1 max-w-md">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search reviews, branches..."
-            className="pl-9 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 h-9"
+            className="pl-9 bg-secondary border-border h-9"
           />
         </div>
       </div>
@@ -53,7 +53,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
       <div className="flex items-center gap-3 ml-auto">
         <Button variant="ghost" size="icon" className="relative" asChild>
           <Link href="/dashboard/alerts">
-            <Bell className="h-4.5 w-4.5 h-5 w-5 text-slate-600" />
+            <Bell className="h-5 w-5 text-muted-foreground" />
           </Link>
         </Button>
 
@@ -62,7 +62,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
             <Button variant="ghost" className="relative h-9 w-9 rounded-full">
               <Avatar className="h-9 w-9">
                 <AvatarImage src={user?.avatar_url ?? ''} alt={user?.full_name ?? ''} />
-                <AvatarFallback className="bg-blue-600 text-white text-xs font-semibold">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
                   {initials ?? 'U'}
                 </AvatarFallback>
               </Avatar>
@@ -71,7 +71,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
           <DropdownMenuContent className="w-56" align="end">
             <DropdownMenuLabel>
               <p className="text-sm font-medium">{user?.full_name}</p>
-              <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
+              <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
@@ -81,7 +81,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
               <Link href="/dashboard/billing"><CreditCard className="mr-2 h-4 w-4" />Billing</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer">
+            <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
               <LogOut className="mr-2 h-4 w-4" />Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>

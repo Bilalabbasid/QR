@@ -27,7 +27,6 @@ export default async function TeamPage() {
 
     if (!userData?.business_id) redirect('/onboarding')
 
-    // Only owners and managers can see this page
     if (!['owner', 'manager'].includes(userData.role)) redirect('/dashboard')
 
     const { data: team, error } = await supabase
@@ -43,7 +42,7 @@ export default async function TeamPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Team Management</h1>
-                    <p className="text-slate-500 dark:text-slate-400">
+                    <p className="text-muted-foreground">
                         Manage your team members and their access levels.
                     </p>
                 </div>
@@ -53,7 +52,7 @@ export default async function TeamPage() {
                 </Button>
             </div>
 
-            <div className="rounded-md border border-slate-200 dark:border-slate-800">
+            <div className="rounded-md border border-border">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -69,21 +68,21 @@ export default async function TeamPage() {
                                 <TableCell className="flex items-center gap-3">
                                     <Avatar className="h-8 w-8">
                                         <AvatarImage src={member.avatar_url ?? ''} />
-                                        <AvatarFallback className="bg-slate-200 dark:bg-slate-800 text-xs">
+                                        <AvatarFallback className="bg-secondary text-foreground text-xs">
                                             {member.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="flex flex-col">
                                         <span className="font-medium text-sm">{member.full_name}</span>
-                                        <span className="text-xs text-slate-500 italic">User ID: ...{member.id.slice(-6)}</span>
+                                        <span className="text-xs text-muted-foreground italic">User ID: ...{member.id.slice(-6)}</span>
                                     </div>
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex items-center gap-2 text-sm capitalize">
                                         {member.role === 'owner' ? (
-                                            <Shield className="h-3 w-3 text-blue-600" />
+                                            <Shield className="h-3 w-3 text-primary" />
                                         ) : (
-                                            <UserIcon className="h-3 w-3 text-slate-400" />
+                                            <UserIcon className="h-3 w-3 text-muted-foreground" />
                                         )}
                                         {member.role}
                                     </div>

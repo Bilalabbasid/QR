@@ -17,6 +17,7 @@ const config: Config = {
     },
     extend: {
       colors: {
+        /* shadcn/ui CSS-variable tokens */
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
@@ -49,6 +50,17 @@ const config: Config = {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
+        },
+
+        /* ── Algominds brand palette (use as bg-brand-lime, text-brand-muted, etc.) ── */
+        brand: {
+          lime:    '#c5f000', /* primary CTA */
+          black:   '#0a0a0a', /* page background */
+          dark:    '#1a1a1a', /* card / panel */
+          surface: '#222222', /* input / secondary surface */
+          border:  '#2e2e2e', /* dividers & borders */
+          muted:   '#888888', /* secondary text */
+          white:   '#ffffff', /* primary text */
         },
       },
       borderRadius: {

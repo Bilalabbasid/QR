@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { DashboardHeader } from '@/components/dashboard/header'
 import { StatsCard } from '@/components/dashboard/stats-card'
 import { getDashboardStats } from '@/lib/analytics'
 import {
@@ -32,8 +31,8 @@ export default async function DashboardPage() {
         <div className="p-6 space-y-6">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
-                <p className="text-slate-500 dark:text-slate-400">
-                    Welcome back, {user.user_metadata.full_name || 'User'}. Here's what's happening with your reviews.
+                <p className="text-muted-foreground">
+                    Welcome back, {user.user_metadata.full_name || 'User'}. Here&apos;s what&apos;s happening with your reviews.
                 </p>
             </div>
 
@@ -69,10 +68,10 @@ export default async function DashboardPage() {
                     <CardHeader>
                         <CardTitle>Rating Trends</CardTitle>
                     </CardHeader>
-                    <CardContent className="h-[300px] flex items-center justify-center border-2 border-dashed rounded-lg m-6">
+                    <CardContent className="h-[300px] flex items-center justify-center border-2 border-dashed border-border rounded-lg m-6">
                         <div className="text-center space-y-2">
-                            <TrendingUp className="h-8 w-8 text-slate-300 mx-auto" />
-                            <p className="text-sm text-slate-500">Chart implementation in progress...</p>
+                            <TrendingUp className="h-8 w-8 text-muted-foreground mx-auto" />
+                            <p className="text-sm text-muted-foreground">Chart implementation in progress...</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -82,10 +81,10 @@ export default async function DashboardPage() {
                         <CardTitle>Recent Alerts</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="flex items-center justify-center h-[200px] border-2 border-dashed rounded-lg">
+                        <div className="flex items-center justify-center h-[200px] border-2 border-dashed border-border rounded-lg">
                             <div className="text-center space-y-2">
-                                <AlertCircle className="h-8 w-8 text-slate-300 mx-auto" />
-                                <p className="text-sm text-slate-500">No critical alerts at the moment.</p>
+                                <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto" />
+                                <p className="text-sm text-muted-foreground">No critical alerts at the moment.</p>
                             </div>
                         </div>
                     </CardContent>

@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle, Clock, CheckCircle2, MessageSquare, ArrowRight } from 'lucide-react'
+import { AlertTriangle, Clock, CheckCircle2, ArrowRight } from 'lucide-react'
 import { format } from 'date-fns'
 import Link from 'next/link'
 
@@ -33,20 +33,26 @@ export default async function AlertsPage() {
         <div className="p-6 space-y-6">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Alerts</h1>
-                <p className="text-slate-500 dark:text-slate-400">
+                <p className="text-muted-foreground">
                     Monitor and address critical reviews that require immediate attention.
                 </p>
             </div>
 
             <div className="space-y-4">
                 {alerts?.map((alert) => (
-                    <Card key={alert.id} className={alert.status === 'unread' ? 'border-l-4 border-l-red-500' : ''}>
+                    <Card key={alert.id} className={alert.status === 'unread' ? 'border-l-4 border-l-destructive' : ''}>
                         <CardContent className="p-6">
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex gap-4">
-                                    <div className={`mt-1 h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${alert.status === 'unread' ? 'bg-red-100 text-red-600 dark:bg-red-900/30' : 'bg-slate-100 text-slate-600 dark:bg-slate-800'
-                                        }`}>
-                                        {alert.status === 'unread' ? <AlertTriangle className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
+                                    <div className={`mt-1 h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
+                                        alert.status === 'unread'
+                                            ? 'bg-destructive/10 text-destructive'
+                                            : 'bg-secondary text-muted-foreground'
+                                    }`}>
+                                        {alert.status === 'unread'
+                                            ? <AlertTriangle className="h-5 w-5" />
+                                            : <CheckCircle2 className="h-5 w-5" />
+                                        }
                                     </div>
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-2">
@@ -55,14 +61,14 @@ export default async function AlertsPage() {
                                             </h3>
                                             {alert.status === 'unread' && <Badge variant="destructive">New</Badge>}
                                         </div>
-                                        <div className="flex items-center gap-2 text-sm text-slate-500">
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                             <Clock className="h-3 w-3" />
                                             {format(new Date(alert.created_at), 'MMM d, h:mm a')}
                                             <span>•</span>
                                             <span className="font-medium">{alert.reviews.branches.name}</span>
                                         </div>
-                                        <p className="text-slate-600 dark:text-slate-400 mt-2 line-clamp-2 italic">
-                                            "{alert.reviews.review_text}"
+                                        <p className="text-muted-foreground mt-2 line-clamp-2 italic">
+                                            &ldquo;{alert.reviews.review_text}&rdquo;
                                         </p>
                                     </div>
                                 </div>
@@ -80,11 +86,11 @@ export default async function AlertsPage() {
                     </Card>
                 ))}
                 {alerts?.length === 0 && (
-                    <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-lg bg-slate-50/50 dark:bg-slate-900/50">
+                    <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-border rounded-lg bg-secondary/30">
                         <CheckCircle2 className="h-12 w-12 text-emerald-500 mb-4" />
                         <h3 className="text-lg font-medium">All clear!</h3>
-                        <p className="text-slate-500 text-center max-w-sm mt-1">
-                            You've addressed all critical reviews. Keep up the great work!
+                        <p className="text-muted-foreground text-center max-w-sm mt-1">
+                            You&apos;ve addressed all critical reviews. Keep up the great work!
                         </p>
                     </div>
                 )}

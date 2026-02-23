@@ -65,7 +65,6 @@ export default function SignupPage() {
     }
 
     if (authData.user) {
-      // Create business & link user via server action
       const res = await fetch('/api/auth/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -94,98 +93,66 @@ export default function SignupPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Create your account</h1>
-        <p className="mt-1 text-slate-400">Start your 14-day free trial</p>
+        <h1 className="text-2xl font-bold text-foreground">Create your account</h1>
+        <p className="mt-1 text-muted-foreground">Start your 14-day free trial</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="fullName" className="text-slate-300">Full Name</Label>
-            <Input
-              id="fullName"
-              placeholder="John Doe"
-              className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
-              {...register('fullName')}
-            />
+            <Label htmlFor="fullName">Full Name</Label>
+            <Input id="fullName" placeholder="John Doe" {...register('fullName')} />
             {errors.fullName && (
-              <p className="text-xs text-red-400">{errors.fullName.message}</p>
+              <p className="text-xs text-destructive">{errors.fullName.message}</p>
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="businessName" className="text-slate-300">Business Name</Label>
-            <Input
-              id="businessName"
-              placeholder="My Restaurant"
-              className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
-              {...register('businessName')}
-            />
+            <Label htmlFor="businessName">Business Name</Label>
+            <Input id="businessName" placeholder="My Restaurant" {...register('businessName')} />
             {errors.businessName && (
-              <p className="text-xs text-red-400">{errors.businessName.message}</p>
+              <p className="text-xs text-destructive">{errors.businessName.message}</p>
             )}
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-slate-300">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="you@company.com"
-            className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
-            {...register('email')}
-          />
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" type="email" placeholder="you@company.com" {...register('email')} />
           {errors.email && (
-            <p className="text-xs text-red-400">{errors.email.message}</p>
+            <p className="text-xs text-destructive">{errors.email.message}</p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-slate-300">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="Min. 8 characters"
-            className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
-            {...register('password')}
-          />
+          <Label htmlFor="password">Password</Label>
+          <Input id="password" type="password" placeholder="Min. 8 characters" {...register('password')} />
           {errors.password && (
-            <p className="text-xs text-red-400">{errors.password.message}</p>
+            <p className="text-xs text-destructive">{errors.password.message}</p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword" className="text-slate-300">Confirm Password</Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            placeholder="••••••••"
-            className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
-            {...register('confirmPassword')}
-          />
+          <Label htmlFor="confirmPassword">Confirm Password</Label>
+          <Input id="confirmPassword" type="password" placeholder="••••••••" {...register('confirmPassword')} />
           {errors.confirmPassword && (
-            <p className="text-xs text-red-400">{errors.confirmPassword.message}</p>
+            <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
           )}
         </div>
 
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700"
-        >
+        <Button type="submit" disabled={loading} className="w-full">
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Create Account
         </Button>
       </form>
 
-      <p className="text-center text-sm text-slate-400">
+      <p className="text-center text-sm text-muted-foreground">
         Already have an account?{' '}
-        <Link href="/auth/login" className="text-blue-400 hover:text-blue-300 font-medium">
+        <Link href="/auth/login" className="text-primary hover:text-primary/80 font-medium">
           Sign in
         </Link>
       </p>
 
-      <p className="text-center text-xs text-slate-500">
+      <p className="text-center text-xs text-muted-foreground">
         By creating an account, you agree to our Terms of Service and Privacy Policy.
       </p>
     </div>

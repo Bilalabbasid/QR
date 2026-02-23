@@ -54,7 +54,6 @@ inspector_port = 8083
 
 [functions.sync-reviews]
 enabled = true
-schedule = "*/5 * * * *"
 
 [analytics]
 enabled = false

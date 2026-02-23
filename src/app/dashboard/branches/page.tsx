@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { MapPin, RefreshCw, ExternalLink } from 'lucide-react'
@@ -32,7 +32,7 @@ export default async function BranchesPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Branches</h1>
-                    <p className="text-slate-500 dark:text-slate-400">
+                    <p className="text-muted-foreground">
                         Manage your connected Google Business Profile locations.
                     </p>
                 </div>
@@ -50,7 +50,7 @@ export default async function BranchesPage() {
                         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                             <div className="space-y-1">
                                 <CardTitle className="text-xl">{branch.name}</CardTitle>
-                                <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
+                                <div className="flex items-center text-sm text-muted-foreground">
                                     <MapPin className="mr-1 h-3 w-3" />
                                     <span className="truncate max-w-[200px]">{branch.address || 'No address provided'}</span>
                                 </div>
@@ -79,10 +79,10 @@ export default async function BranchesPage() {
                     </Card>
                 ))}
                 {branches?.length === 0 && (
-                    <div className="col-span-full flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-lg bg-slate-50/50 dark:bg-slate-900/50">
-                        <MapPin className="h-12 w-12 text-slate-300 mb-4" />
+                    <div className="col-span-full flex flex-col items-center justify-center p-12 border-2 border-dashed border-border rounded-lg bg-secondary/30">
+                        <MapPin className="h-12 w-12 text-muted-foreground mb-4" />
                         <h3 className="text-lg font-medium">No branches connected</h3>
-                        <p className="text-slate-500 text-center max-w-sm mt-1">
+                        <p className="text-muted-foreground text-center max-w-sm mt-1">
                             Connect your Google Business Profile to start managing your locations and reviews.
                         </p>
                         {userData.role === 'owner' && (

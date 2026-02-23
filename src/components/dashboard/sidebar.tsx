@@ -57,15 +57,15 @@ export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
   return (
     <aside
       className={cn(
-        'flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all duration-300',
+        'flex flex-col border-r border-border bg-card transition-all duration-300',
         collapsed ? 'w-16' : 'w-64'
       )}
     >
       {/* Logo */}
-      <div className={cn('flex items-center gap-3 p-4 h-16 border-b border-slate-200 dark:border-slate-800', collapsed && 'justify-center')}>
-        <Star className="h-6 w-6 text-yellow-400 fill-yellow-400 shrink-0" />
+      <div className={cn('flex items-center gap-3 p-4 h-16 border-b border-border', collapsed && 'justify-center')}>
+        <Star className="h-6 w-6 text-primary fill-primary shrink-0" />
         {!collapsed && (
-          <span className="font-bold text-slate-900 dark:text-white text-lg">ReviewIQ</span>
+          <span className="font-bold text-foreground text-lg">ReviewIQ</span>
         )}
       </div>
 
@@ -80,13 +80,13 @@ export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white',
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
                 collapsed && 'justify-center'
               )}
               title={collapsed ? label : undefined}
             >
-              <Icon className="h-4.5 w-4.5 shrink-0 h-5 w-5" />
+              <Icon className="h-5 w-5 shrink-0" />
               {!collapsed && label}
             </Link>
           )
@@ -94,12 +94,12 @@ export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
       </nav>
 
       {/* Bottom */}
-      <div className="p-3 border-t border-slate-200 dark:border-slate-800 space-y-1">
+      <div className="p-3 border-t border-border space-y-1">
         <Button
           variant="ghost"
           onClick={handleSignOut}
           className={cn(
-            'w-full text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400',
+            'w-full text-muted-foreground hover:text-destructive',
             collapsed ? 'px-0 justify-center' : 'justify-start'
           )}
         >
@@ -111,7 +111,7 @@ export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
           size="sm"
           onClick={() => setCollapsed(!collapsed)}
           className={cn(
-            'w-full text-slate-400',
+            'w-full text-muted-foreground',
             collapsed ? 'px-0 justify-center' : 'justify-end'
           )}
         >

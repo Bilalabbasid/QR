@@ -58,33 +58,28 @@ export default function LoginPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Welcome back</h1>
-        <p className="mt-1 text-slate-400">Sign in to your ReviewIQ account</p>
+        <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
+        <p className="mt-1 text-muted-foreground">Sign in to your ReviewIQ account</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-slate-300">
-            Email
-          </Label>
+          <Label htmlFor="email">Email</Label>
           <Input
             id="email"
             type="email"
             placeholder="you@company.com"
-            className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
             {...register('email')}
           />
           {errors.email && (
-            <p className="text-xs text-red-400">{errors.email.message}</p>
+            <p className="text-xs text-destructive">{errors.email.message}</p>
           )}
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-slate-300">
-              Password
-            </Label>
-            <Link href="/auth/forgot-password" className="text-xs text-blue-400 hover:text-blue-300">
+            <Label htmlFor="password">Password</Label>
+            <Link href="/auth/forgot-password" className="text-xs text-primary hover:text-primary/80">
               Forgot password?
             </Link>
           </div>
@@ -92,27 +87,22 @@ export default function LoginPage() {
             id="password"
             type="password"
             placeholder="••••••••"
-            className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
             {...register('password')}
           />
           {errors.password && (
-            <p className="text-xs text-red-400">{errors.password.message}</p>
+            <p className="text-xs text-destructive">{errors.password.message}</p>
           )}
         </div>
 
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700"
-        >
+        <Button type="submit" disabled={loading} className="w-full">
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Sign In
         </Button>
       </form>
 
-      <p className="text-center text-sm text-slate-400">
+      <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{' '}
-        <Link href="/auth/signup" className="text-blue-400 hover:text-blue-300 font-medium">
+        <Link href="/auth/signup" className="text-primary hover:text-primary/80 font-medium">
           Sign up
         </Link>
       </p>

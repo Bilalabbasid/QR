@@ -4,24 +4,22 @@ import { Star, BarChart2, Bell, Users, Zap, Shield } from 'lucide-react'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Nav */}
-      <nav className="border-b border-white/10 px-6 py-4">
+      <nav className="border-b border-border px-6 py-4">
         <div className="mx-auto max-w-7xl flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Star className="h-6 w-6 text-yellow-400 fill-yellow-400" />
+            <Star className="h-6 w-6 text-primary fill-primary" />
             <span className="text-xl font-bold">ReviewIQ</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/auth/login">
-              <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10">
+              <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
                 Sign in
               </Button>
             </Link>
             <Link href="/auth/signup">
-              <Button className="bg-blue-600 hover:bg-blue-700">
-                Start Free Trial
-              </Button>
+              <Button>Start Free Trial</Button>
             </Link>
           </div>
         </div>
@@ -29,28 +27,28 @@ export default function HomePage() {
 
       {/* Hero */}
       <section className="mx-auto max-w-7xl px-6 py-24 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 text-sm text-blue-300 mb-6">
+        <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm text-primary mb-6">
           <Zap className="h-3.5 w-3.5" />
           AI-Powered Review Management
         </div>
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
           Manage Every Google Review{' '}
-          <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+          <span className="text-primary">
             Effortlessly
           </span>
         </h1>
-        <p className="text-xl text-slate-300 max-w-3xl mx-auto mb-10">
-          Connect your Google Business Profile, auto-reply with AI, get deep insights across all branches, 
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-10">
+          Connect your Google Business Profile, auto-reply with AI, get deep insights across all branches,
           and never miss a negative review again.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/auth/signup">
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8">
+            <Button size="lg" className="px-8">
               Get Started Free
             </Button>
           </Link>
           <Link href="#features">
-            <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 px-8">
+            <Button size="lg" variant="outline" className="px-8">
               See Features
             </Button>
           </Link>
@@ -95,13 +93,13 @@ export default function HomePage() {
           ].map(({ icon: Icon, title, desc }) => (
             <div
               key={title}
-              className="rounded-xl border border-white/10 bg-white/5 p-6 hover:bg-white/8 transition-colors"
+              className="rounded-xl border border-border bg-card p-6 hover:border-primary/50 transition-colors"
             >
-              <div className="mb-4 inline-flex rounded-lg bg-blue-500/20 p-2.5">
-                <Icon className="h-5 w-5 text-blue-400" />
+              <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-2.5">
+                <Icon className="h-5 w-5 text-primary" />
               </div>
               <h3 className="text-lg font-semibold mb-2">{title}</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
+              <p className="text-muted-foreground text-sm leading-relaxed">{desc}</p>
             </div>
           ))}
         </div>
@@ -109,20 +107,20 @@ export default function HomePage() {
 
       {/* CTA */}
       <section className="mx-auto max-w-4xl px-6 py-24 text-center">
-        <div className="rounded-2xl border border-blue-500/30 bg-blue-500/10 p-12">
+        <div className="rounded-2xl border border-border bg-card p-12">
           <h2 className="text-3xl font-bold mb-4">Start Managing Reviews Today</h2>
-          <p className="text-slate-300 mb-8">
+          <p className="text-muted-foreground mb-8">
             Free 14-day trial. No credit card required.
           </p>
           <Link href="/auth/signup">
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 px-10">
+            <Button size="lg" className="px-10">
               Create Free Account
             </Button>
           </Link>
         </div>
       </section>
 
-      <footer className="border-t border-white/10 px-6 py-8 text-center text-slate-500 text-sm">
+      <footer className="border-t border-border px-6 py-8 text-center text-muted-foreground text-sm">
         © {new Date().getFullYear()} ReviewIQ. All rights reserved.
       </footer>
     </div>
