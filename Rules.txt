@@ -1,0 +1,280 @@
+You are not just building the system.
+
+You are responsible for:
+
+• Architecting
+• Implementing
+• Validating
+• Auditing
+• Verifying completeness
+
+You must NOT leave partial implementations.
+
+🚦 BUILD PHASE CONTROL SYSTEM
+
+Break the project into phases.
+
+After completing each phase:
+
+Output a checklist
+
+Mark completed items
+
+Mark pending items
+
+Explain what still needs implementation
+
+Do not move to next phase until validation passes
+
+📦 PHASES
+PHASE 1 – Core Architecture
+
+You must confirm:
+
+☐ Next.js 14 App Router structure created
+☐ Supabase client configured (server & client)
+☐ Environment variables documented
+☐ Folder structure production-ready
+☐ TypeScript strict mode enabled
+☐ Tailwind + shadcn configured
+
+Before moving on:
+Output a verification checklist.
+
+PHASE 2 – Database & RLS
+
+You must:
+
+☐ Generate full SQL migration file
+☐ Create all tables exactly as specified
+☐ Add foreign keys
+☐ Add indexes
+☐ Create enum types
+☐ Enable RLS on all business data tables
+☐ Write RLS policies for:
+
+businesses
+
+users
+
+branches
+
+reviews
+
+replies
+
+alerts
+
+ai_summaries
+☐ Test multi-tenant isolation logic
+
+Validation step:
+Simulate:
+User A cannot see Business B data.
+
+Output:
+
+SQL file
+
+RLS explanation
+
+Test query example
+
+Do not continue if RLS incomplete.
+
+PHASE 3 – Authentication & Roles
+
+You must verify:
+
+☐ Supabase Auth integrated
+☐ User auto-linked to business
+☐ Role-based UI rendering
+☐ Only owner can manage billing
+☐ Managers can reply to reviews
+☐ Staff cannot change settings
+
+Output:
+Role-permission matrix table.
+
+PHASE 4 – Google OAuth Integration
+
+You must confirm:
+
+☐ OAuth flow implemented
+☐ Access token exchange implemented
+☐ Refresh token securely stored
+☐ Token refresh logic built
+☐ accounts.list endpoint integrated
+☐ locations.list endpoint integrated
+☐ Branches auto-inserted in DB
+☐ Duplicate branch protection
+☐ Error handling for revoked permissions
+
+Validation required:
+Simulate:
+
+Expired access token
+
+Revoked refresh token
+
+Business with 10 branches
+
+Explain how system handles each.
+
+PHASE 5 – Review Sync Engine
+
+You must verify:
+
+☐ Background job created (Edge Function or cron)
+☐ Iterates over businesses
+☐ Refreshes tokens
+☐ Fetches reviews per branch
+☐ Prevents duplicate insert
+☐ Handles pagination
+☐ Logs API failures
+☐ Respects Google quota
+
+Validation:
+Simulate:
+
+5000 reviews
+
+API rate limit hit
+
+Branch removed from Google
+
+Explain fallback logic.
+
+PHASE 6 – AI Layer
+
+You must verify:
+
+☐ Sentiment detection implemented
+☐ Topic extraction implemented
+☐ Tag storage implemented
+☐ Auto-reply generation implemented
+☐ Reply tone professional
+☐ Auto-reply toggle per business
+☐ Manual override supported
+
+Validation:
+Given sample review:
+"Food good but staff rude and overpriced"
+
+Output:
+
+Sentiment
+
+Tags
+
+Suggested reply
+
+PHASE 7 – Dashboard UI Coverage Audit
+
+You must verify each page exists and is fully functional:
+
+☐ Overview page
+☐ Reviews page
+☐ Branches page
+☐ AI Insights page
+☐ Alerts page
+☐ Team management page
+☐ Settings page
+☐ Billing placeholder
+
+Each page must:
+
+☐ Fetch real data
+☐ Handle loading state
+☐ Handle empty state
+☐ Handle error state
+☐ Be mobile responsive
+
+If any page uses mock data → STOP and fix.
+
+PHASE 8 – Performance & Scaling Audit
+
+Verify:
+
+☐ Reviews are paginated
+☐ Heavy queries indexed
+☐ No N+1 queries
+☐ Server components used where possible
+☐ Caching strategy defined
+☐ Edge functions optimized
+
+Explain scaling to:
+100 businesses
+500 branches
+100k reviews
+
+PHASE 9 – Security Audit
+
+Verify:
+
+☐ Refresh tokens encrypted
+☐ No secret exposed in client
+☐ No service role key leaked
+☐ RLS enforced
+☐ API routes protected
+☐ Rate limiting implemented
+
+Simulate:
+User manually changes business_id in request.
+Explain why it fails.
+
+🔍 FINAL SYSTEM COMPLETENESS CHECK
+
+Before declaring build complete:
+
+You must output:
+
+Feature Coverage Table
+
+Security Coverage Table
+
+Scaling Coverage Table
+
+Missing Items (if any)
+
+Suggested Improvements
+
+If anything is incomplete:
+List exact missing file or logic.
+
+🚫 RULES
+
+• Do not skip validation
+• Do not generate pseudo-code unless asked
+• Do not leave TODO comments
+• Do not mock API responses
+• Do not assume external service works
+• Always show test example
+
+🧪 CONTINUOUS BUILD MONITOR MODE
+
+After every major output, ask yourself:
+
+"Is this production ready?"
+
+If answer is no:
+Fix before continuing.
+
+📊 FINAL OUTPUT FORMAT
+
+When finished, output:
+
+SYSTEM STATUS:
+✔ Core Architecture
+✔ Database
+✔ RLS
+✔ Auth
+✔ OAuth
+✔ Review Sync
+✔ AI Layer
+✔ Dashboard
+✔ Security
+✔ Scaling
+
+If any not complete:
+Mark ❌ and explain.

@@ -1,0 +1,193 @@
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useToast } from '@/components/ui/use-toast'
+import { Loader2 } from 'lucide-react'
+
+const signupSchema = z.object({
+  fullName: z.string().min(2, 'Name must be at least 2 characters'),
+  businessName: z.string().min(2, 'Business name is required'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+})
+
+type SignupForm = z.infer<typeof signupSchema>
+
+export default function SignupPage() {
+  const router = useRouter()
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+  const supabase = createClient()
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignupForm>({
+    resolver: zodResolver(signupSchema),
+  })
+
+  const onSubmit = async (data: SignupForm) => {
+    setLoading(true)
+
+    const { data: authData, error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          full_name: data.fullName,
+          business_name: data.businessName,
+        },
+      },
+    })
+
+    if (error) {
+      toast({
+        title: 'Signup failed',
+        description: error.message,
+        variant: 'destructive',
+      })
+      setLoading(false)
+      return
+    }
+
+    if (authData.user) {
+      // Create business & link user via server action
+      const res = await fetch('/api/auth/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: authData.user.id,
+          fullName: data.fullName,
+          businessName: data.businessName,
+        }),
+      })
+
+      if (res.ok) {
+        router.push('/dashboard')
+        router.refresh()
+      } else {
+        toast({
+          title: 'Setup failed',
+          description: 'Account created but setup failed. Please contact support.',
+          variant: 'destructive',
+        })
+      }
+    }
+
+    setLoading(false)
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-white">Create your account</h1>
+        <p className="mt-1 text-slate-400">Start your 14-day free trial</p>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="fullName" className="text-slate-300">Full Name</Label>
+            <Input
+              id="fullName"
+              placeholder="John Doe"
+              className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
+              {...register('fullName')}
+            />
+            {errors.fullName && (
+              <p className="text-xs text-red-400">{errors.fullName.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="businessName" className="text-slate-300">Business Name</Label>
+            <Input
+              id="businessName"
+              placeholder="My Restaurant"
+              className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
+              {...register('businessName')}
+            />
+            {errors.businessName && (
+              <p className="text-xs text-red-400">{errors.businessName.message}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-slate-300">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="you@company.com"
+            className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
+            {...register('email')}
+          />
+          {errors.email && (
+            <p className="text-xs text-red-400">{errors.email.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="password" className="text-slate-300">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="Min. 8 characters"
+            className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
+            {...register('password')}
+          />
+          {errors.password && (
+            <p className="text-xs text-red-400">{errors.password.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword" className="text-slate-300">Confirm Password</Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            placeholder="••••••••"
+            className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
+            {...register('confirmPassword')}
+          />
+          {errors.confirmPassword && (
+            <p className="text-xs text-red-400">{errors.confirmPassword.message}</p>
+          )}
+        </div>
+
+        <Button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-600 hover:bg-blue-700"
+        >
+          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Create Account
+        </Button>
+      </form>
+
+      <p className="text-center text-sm text-slate-400">
+        Already have an account?{' '}
+        <Link href="/auth/login" className="text-blue-400 hover:text-blue-300 font-medium">
+          Sign in
+        </Link>
+      </p>
+
+      <p className="text-center text-xs text-slate-500">
+        By creating an account, you agree to our Terms of Service and Privacy Policy.
+      </p>
+    </div>
+  )
+}
