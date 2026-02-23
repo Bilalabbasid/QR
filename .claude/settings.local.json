@@ -4,7 +4,9 @@
       "Bash(cd C:\\\\Users\\\\hp\\\\Desktop\\\\QR\\\\QR:*)",
       "Bash(cd \"C:\\\\Users\\\\hp\\\\Desktop\\\\QR\\\\QR\" && supabase --version 2>&1)",
       "Bash(cd \"C:\\\\Users\\\\hp\\\\Desktop\\\\QR\\\\QR\" && set -a && source .env && set +a && supabase db push --db-url \"$DATABASE_URL\" 2>&1)",
-      "Bash(cd \"C:\\\\Users\\\\hp\\\\Desktop\\\\QR\\\\QR\" && set -a && source .env && set +a && curl -s \\\\\n  \"${NEXT_PUBLIC_SUPABASE_URL}/rest/v1/businesses?select=id,name,google_account_id&limit=0\" \\\\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\\\n  -w \"\\\\nHTTP %{http_code}\" && echo \"\" && \\\\\n  curl -s \\\\\n  \"${NEXT_PUBLIC_SUPABASE_URL}/rest/v1/branches?select=id,name,google_location_id&limit=0\" \\\\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\\\n  -w \"\\\\nHTTP %{http_code}\" 2>&1)"
+      "Bash(cd \"C:\\\\Users\\\\hp\\\\Desktop\\\\QR\\\\QR\" && set -a && source .env && set +a && curl -s \\\\\n  \"${NEXT_PUBLIC_SUPABASE_URL}/rest/v1/businesses?select=id,name,google_account_id&limit=0\" \\\\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\\\n  -w \"\\\\nHTTP %{http_code}\" && echo \"\" && \\\\\n  curl -s \\\\\n  \"${NEXT_PUBLIC_SUPABASE_URL}/rest/v1/branches?select=id,name,google_location_id&limit=0\" \\\\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\\\n  -w \"\\\\nHTTP %{http_code}\" 2>&1)",
+      "Bash(cd:*)",
+      "Bash(head:*)"
     ]
   }
 }

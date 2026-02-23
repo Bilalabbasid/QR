@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { StatsCard } from '@/components/dashboard/stats-card'
-import { getDashboardStats } from '@/lib/analytics'
+import { getBusinessStats as getDashboardStats } from '@/lib/analytics'
 import {
     Users,
     MessageSquare,
