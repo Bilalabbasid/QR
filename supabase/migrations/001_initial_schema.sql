@@ -10,20 +10,20 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- ENUMS
 -- =====================
 
-CREATE TYPE user_role AS ENUM ('owner', 'manager', 'staff');
-CREATE TYPE reply_status AS ENUM ('none', 'auto_replied', 'manual_replied');
-CREATE TYPE sentiment_type AS ENUM ('positive', 'neutral', 'negative');
-CREATE TYPE reply_source AS ENUM ('auto', 'manual');
-CREATE TYPE alert_type AS ENUM ('low_rating');
-CREATE TYPE notification_channel AS ENUM ('email', 'whatsapp');
-CREATE TYPE summary_type AS ENUM ('monthly', 'weekly');
-CREATE TYPE subscription_plan AS ENUM ('free', 'starter', 'professional', 'enterprise');
+DO $$ BEGIN CREATE TYPE user_role AS ENUM ('owner', 'manager', 'staff'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE reply_status AS ENUM ('none', 'auto_replied', 'manual_replied'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE sentiment_type AS ENUM ('positive', 'neutral', 'negative'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE reply_source AS ENUM ('auto', 'manual'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE alert_type AS ENUM ('low_rating'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE notification_channel AS ENUM ('email', 'whatsapp'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE summary_type AS ENUM ('monthly', 'weekly'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE subscription_plan AS ENUM ('free', 'starter', 'professional', 'enterprise'); EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 -- =====================
 -- BUSINESSES
 -- =====================
 
-CREATE TABLE businesses (
+CREATE TABLE IF NOT EXISTS businesses (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   logo_url TEXT,
@@ -42,7 +42,7 @@ CREATE TABLE businesses (
 -- USERS (extends auth.users)
 -- =====================
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   business_id UUID REFERENCES businesses(id) ON DELETE SET NULL,
   full_name TEXT NOT NULL,
@@ -55,7 +55,7 @@ CREATE TABLE users (
 -- BRANCHES
 -- =====================
 
-CREATE TABLE branches (
+CREATE TABLE IF NOT EXISTS branches (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
   google_location_id TEXT,
@@ -67,13 +67,13 @@ CREATE TABLE branches (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_branches_business_id ON branches(business_id);
+CREATE INDEX IF NOT EXISTS idx_branches_business_id ON branches(business_id);
 
 -- =====================
 -- GOOGLE TOKENS
 -- =====================
 
-CREATE TABLE google_tokens (
+CREATE TABLE IF NOT EXISTS google_tokens (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
   access_token TEXT NOT NULL,
@@ -89,7 +89,7 @@ CREATE TABLE google_tokens (
 -- REVIEWS
 -- =====================
 
-CREATE TABLE reviews (
+CREATE TABLE IF NOT EXISTS reviews (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   branch_id UUID NOT NULL REFERENCES branches(id) ON DELETE CASCADE,
   google_review_id TEXT UNIQUE NOT NULL,
@@ -104,17 +104,17 @@ CREATE TABLE reviews (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_reviews_branch_id ON reviews(branch_id);
-CREATE INDEX idx_reviews_rating ON reviews(rating);
-CREATE INDEX idx_reviews_review_time ON reviews(review_time DESC);
-CREATE INDEX idx_reviews_sentiment ON reviews(sentiment);
-CREATE INDEX idx_reviews_reply_status ON reviews(reply_status);
+CREATE INDEX IF NOT EXISTS idx_reviews_branch_id ON reviews(branch_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating);
+CREATE INDEX IF NOT EXISTS idx_reviews_review_time ON reviews(review_time DESC);
+CREATE INDEX IF NOT EXISTS idx_reviews_sentiment ON reviews(sentiment);
+CREATE INDEX IF NOT EXISTS idx_reviews_reply_status ON reviews(reply_status);
 
 -- =====================
 -- REPLIES
 -- =====================
 
-CREATE TABLE replies (
+CREATE TABLE IF NOT EXISTS replies (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   review_id UUID NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
   reply_text TEXT NOT NULL,
@@ -125,27 +125,27 @@ CREATE TABLE replies (
   UNIQUE(review_id)
 );
 
-CREATE INDEX idx_replies_review_id ON replies(review_id);
+CREATE INDEX IF NOT EXISTS idx_replies_review_id ON replies(review_id);
 
 -- =====================
 -- REVIEW TAGS
 -- =====================
 
-CREATE TABLE review_tags (
+CREATE TABLE IF NOT EXISTS review_tags (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   review_id UUID NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
   tag TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_review_tags_review_id ON review_tags(review_id);
-CREATE INDEX idx_review_tags_tag ON review_tags(tag);
+CREATE INDEX IF NOT EXISTS idx_review_tags_review_id ON review_tags(review_id);
+CREATE INDEX IF NOT EXISTS idx_review_tags_tag ON review_tags(tag);
 
 -- =====================
 -- ALERTS
 -- =====================
 
-CREATE TABLE alerts (
+CREATE TABLE IF NOT EXISTS alerts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
   branch_id UUID REFERENCES branches(id) ON DELETE CASCADE,
@@ -156,14 +156,14 @@ CREATE TABLE alerts (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_alerts_business_id ON alerts(business_id);
-CREATE INDEX idx_alerts_is_read ON alerts(is_read);
+CREATE INDEX IF NOT EXISTS idx_alerts_business_id ON alerts(business_id);
+CREATE INDEX IF NOT EXISTS idx_alerts_is_read ON alerts(is_read);
 
 -- =====================
 -- AI SUMMARIES
 -- =====================
 
-CREATE TABLE ai_summaries (
+CREATE TABLE IF NOT EXISTS ai_summaries (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   branch_id UUID NOT NULL REFERENCES branches(id) ON DELETE CASCADE,
   summary_type summary_type NOT NULL,
@@ -173,13 +173,13 @@ CREATE TABLE ai_summaries (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_ai_summaries_branch_id ON ai_summaries(branch_id);
+CREATE INDEX IF NOT EXISTS idx_ai_summaries_branch_id ON ai_summaries(branch_id);
 
 -- =====================
 -- TEAM INVITATIONS
 -- =====================
 
-CREATE TABLE team_invitations (
+CREATE TABLE IF NOT EXISTS team_invitations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
@@ -195,7 +195,7 @@ CREATE TABLE team_invitations (
 -- SYNC LOGS
 -- =====================
 
-CREATE TABLE sync_logs (
+CREATE TABLE IF NOT EXISTS sync_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
   branch_id UUID REFERENCES branches(id),
@@ -219,10 +219,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_businesses_updated_at ON businesses;
 CREATE TRIGGER update_businesses_updated_at
   BEFORE UPDATE ON businesses
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_google_tokens_updated_at ON google_tokens;
 CREATE TRIGGER update_google_tokens_updated_at
   BEFORE UPDATE ON google_tokens
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -231,10 +233,10 @@ CREATE TRIGGER update_google_tokens_updated_at
 -- AUTO-CREATE USER ON SIGNUP
 -- =====================
 
-CREATE OR REPLACE FUNCTION handle_new_user()
+CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO users (id, full_name, role)
+  INSERT INTO public.users (id, full_name, role)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
@@ -242,11 +244,12 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- =====================
 -- RLS: ENABLE
@@ -308,7 +311,7 @@ CREATE POLICY "Users can update their own profile"
 
 CREATE POLICY "Allow insert users"
   ON users FOR INSERT
-  WITH CHECK (id = auth.uid());
+  WITH CHECK (true);
 
 CREATE POLICY "Owners and managers can delete team members"
   ON users FOR DELETE

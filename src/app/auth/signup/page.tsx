@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -27,7 +26,6 @@ const signupSchema = z.object({
 type SignupForm = z.infer<typeof signupSchema>
 
 export default function SignupPage() {
-  const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
@@ -43,29 +41,35 @@ export default function SignupPage() {
   const onSubmit = async (data: SignupForm) => {
     setLoading(true)
 
-    const { data: authData, error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: {
-          full_name: data.fullName,
-          business_name: data.businessName,
+    try {
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.fullName,
+            business_name: data.businessName,
+          },
         },
-      },
-    })
-
-    if (error) {
-      toast({
-        title: 'Signup failed',
-        description: error.message,
-        variant: 'destructive',
       })
-      setLoading(false)
-      return
-    }
 
-    if (authData.user) {
-      const res = await fetch('/api/auth/setup', {
+      if (error) {
+        toast({ title: 'Signup failed', description: error.message, variant: 'destructive' })
+        return
+      }
+
+      // Supabase returns a fake user with empty identities for already-registered emails
+      if (!authData.user || authData.user.identities?.length === 0) {
+        toast({
+          title: 'Email already registered',
+          description: 'An account with this email already exists. Please sign in instead.',
+          variant: 'destructive',
+        })
+        return
+      }
+
+      // Call setup with service role — works before email is confirmed
+      const setupRes = await fetch('/api/auth/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -75,19 +79,32 @@ export default function SignupPage() {
         }),
       })
 
-      if (res.ok) {
-        router.push('/dashboard')
-        router.refresh()
-      } else {
+      const setupBody = await setupRes.json().catch(() => ({}))
+
+      if (!setupRes.ok) {
         toast({
           title: 'Setup failed',
-          description: 'Account created but setup failed. Please contact support.',
+          description: setupBody.error || 'Account created but setup failed. Please contact support.',
           variant: 'destructive',
         })
+        return
       }
-    }
 
-    setLoading(false)
+      if (authData.session) {
+        // Email confirmation disabled — go straight to dashboard
+        window.location.href = '/dashboard'
+      } else {
+        // Email confirmation required
+        toast({
+          title: 'Account created! Check your email 📬',
+          description: `We sent a confirmation link to ${data.email}. Click it to activate your account.`,
+        })
+      }
+    } catch (err: any) {
+      toast({ title: 'Unexpected error', description: err.message, variant: 'destructive' })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
