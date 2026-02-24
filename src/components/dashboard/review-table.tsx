@@ -56,7 +56,7 @@ export function ReviewTable({ reviews, onReplied }: ReviewTableProps) {
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm text-slate-500">{review.branch?.name}</TableCell>
+                  <TableCell className="text-sm text-slate-500">{review.branches?.name}</TableCell>
                   <TableCell><StarRating rating={review.rating} /></TableCell>
                   <TableCell className="text-sm text-slate-600 dark:text-slate-300">
                     {review.review_text ? truncate(review.review_text, 80) : <em className="text-slate-400 text-xs">No text</em>}

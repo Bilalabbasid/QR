@@ -1,4 +1,4 @@
-﻿export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type UserRole = 'owner' | 'manager' | 'staff'
 export type ReplyStatus = 'not_replied' | 'auto_replied' | 'manual_replied'
@@ -15,102 +15,480 @@ export interface Database {
     Tables: {
       businesses: {
         Row: {
-          id: string; name: string; logo_url: string | null; industry: string | null
-          subscription_plan: SubscriptionPlan; subscription_status: SubscriptionStatus | null
-          google_account_id: string | null; auto_reply_enabled: boolean
-          low_rating_threshold: number; notification_email: string | null
-          notification_whatsapp: string | null; stripe_customer_id: string | null
-          stripe_subscription_id: string | null; created_at: string; updated_at: string
+          id: string
+          name: string
+          logo_url: string | null
+          industry: string | null
+          subscription_plan: SubscriptionPlan
+          subscription_status: SubscriptionStatus | null
+          google_account_id: string | null
+          auto_reply_enabled: boolean
+          low_rating_threshold: number
+          notification_email: string | null
+          notification_whatsapp: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          created_at: string
+          updated_at: string
         }
         Insert: {
-          id?: string; name: string; logo_url?: string | null; industry?: string | null
-          subscription_plan?: SubscriptionPlan; subscription_status?: SubscriptionStatus | null
-          google_account_id?: string | null; auto_reply_enabled?: boolean
-          low_rating_threshold?: number; notification_email?: string | null
-          notification_whatsapp?: string | null; stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null; created_at?: string; updated_at?: string
+          id?: string
+          name: string
+          logo_url?: string | null
+          industry?: string | null
+          subscription_plan?: SubscriptionPlan
+          subscription_status?: SubscriptionStatus | null
+          google_account_id?: string | null
+          auto_reply_enabled?: boolean
+          low_rating_threshold?: number
+          notification_email?: string | null
+          notification_whatsapp?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          name?: string; logo_url?: string | null; industry?: string | null
-          subscription_plan?: SubscriptionPlan; subscription_status?: SubscriptionStatus | null
-          google_account_id?: string | null; auto_reply_enabled?: boolean
-          low_rating_threshold?: number; notification_email?: string | null
-          notification_whatsapp?: string | null; stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null; updated_at?: string
+          name?: string
+          logo_url?: string | null
+          industry?: string | null
+          subscription_plan?: SubscriptionPlan
+          subscription_status?: SubscriptionStatus | null
+          google_account_id?: string | null
+          auto_reply_enabled?: boolean
+          low_rating_threshold?: number
+          notification_email?: string | null
+          notification_whatsapp?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
       users: {
-        Row: { id: string; business_id: string | null; full_name: string; role: UserRole; avatar_url: string | null; created_at: string }
-        Insert: { id: string; business_id?: string | null; full_name: string; role?: UserRole; avatar_url?: string | null; created_at?: string }
-        Update: { business_id?: string | null; full_name?: string; role?: UserRole; avatar_url?: string | null }
-        Relationships: []
+        Row: {
+          id: string
+          business_id: string | null
+          full_name: string
+          role: UserRole
+          avatar_url: string | null
+          created_at: string
+        }
+        Insert: {
+          id: string
+          business_id?: string | null
+          full_name: string
+          role?: UserRole
+          avatar_url?: string | null
+          created_at?: string
+        }
+        Update: {
+          business_id?: string | null
+          full_name?: string
+          role?: UserRole
+          avatar_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "users_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       branches: {
-        Row: { id: string; business_id: string; google_location_id: string | null; name: string; address: string | null; phone: string | null; city: string | null; is_active: boolean; created_at: string }
-        Insert: { id?: string; business_id: string; google_location_id?: string | null; name: string; address?: string | null; phone?: string | null; city?: string | null; is_active?: boolean; created_at?: string }
-        Update: { business_id?: string; google_location_id?: string | null; name?: string; address?: string | null; phone?: string | null; city?: string | null; is_active?: boolean }
-        Relationships: []
+        Row: {
+          id: string
+          business_id: string
+          google_location_id: string | null
+          name: string
+          address: string | null
+          phone: string | null
+          city: string | null
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          business_id: string
+          google_location_id?: string | null
+          name: string
+          address?: string | null
+          phone?: string | null
+          city?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          business_id?: string
+          google_location_id?: string | null
+          name?: string
+          address?: string | null
+          phone?: string | null
+          city?: string | null
+          is_active?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branches_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       google_tokens: {
-        Row: { id: string; business_id: string; access_token: string; refresh_token: string; expires_at: string; expiry_date: string | null; scope: string | null; created_at: string; updated_at: string }
-        Insert: { id?: string; business_id: string; access_token: string; refresh_token: string; expires_at: string; expiry_date?: string | null; scope?: string | null; created_at?: string; updated_at?: string }
-        Update: { access_token?: string; refresh_token?: string; expires_at?: string; expiry_date?: string | null; scope?: string | null; updated_at?: string }
-        Relationships: []
+        Row: {
+          id: string
+          business_id: string
+          access_token: string
+          refresh_token: string
+          expiry_date: string
+          google_account_id: string | null
+          scope: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          business_id: string
+          access_token: string
+          refresh_token: string
+          expiry_date: string
+          google_account_id?: string | null
+          scope?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          refresh_token?: string
+          expiry_date?: string
+          google_account_id?: string | null
+          scope?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_tokens_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       reviews: {
-        Row: { id: string; branch_id: string; google_review_id: string; google_review_name: string | null; reviewer_name: string; reviewer_profile_photo: string | null; rating: number; review_text: string | null; review_date: string | null; review_time: string | null; reply_status: ReplyStatus; sentiment: SentimentType | null; tags: string[] | null; ai_suggested_reply: string | null; created_at: string }
-        Insert: { id?: string; branch_id: string; google_review_id: string; google_review_name?: string | null; reviewer_name: string; reviewer_profile_photo?: string | null; rating: number; review_text?: string | null; review_date?: string | null; review_time?: string | null; reply_status?: ReplyStatus; sentiment?: SentimentType | null; tags?: string[] | null; ai_suggested_reply?: string | null; created_at?: string }
-        Update: { google_review_name?: string | null; reviewer_name?: string; rating?: number; review_text?: string | null; review_date?: string | null; review_time?: string | null; reply_status?: ReplyStatus; sentiment?: SentimentType | null; tags?: string[] | null; ai_suggested_reply?: string | null }
-        Relationships: []
+        Row: {
+          id: string
+          branch_id: string
+          google_review_id: string
+          google_review_name: string | null
+          reviewer_name: string
+          reviewer_profile_photo: string | null
+          rating: number
+          review_text: string | null
+          review_date: string | null
+          review_time: string
+          reply_status: ReplyStatus
+          sentiment: SentimentType | null
+          ai_suggested_reply: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          branch_id: string
+          google_review_id: string
+          google_review_name?: string | null
+          reviewer_name: string
+          reviewer_profile_photo?: string | null
+          rating: number
+          review_text?: string | null
+          review_date?: string | null
+          review_time: string
+          reply_status?: ReplyStatus
+          sentiment?: SentimentType | null
+          ai_suggested_reply?: string | null
+          created_at?: string
+        }
+        Update: {
+          google_review_name?: string | null
+          reviewer_name?: string
+          rating?: number
+          review_text?: string | null
+          review_date?: string | null
+          review_time?: string
+          reply_status?: ReplyStatus
+          sentiment?: SentimentType | null
+          ai_suggested_reply?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       replies: {
-        Row: { id: string; review_id: string; reply_text: string; reply_source: ReplySource; posted_to_google: boolean; posted_at: string | null; created_at: string }
-        Insert: { id?: string; review_id: string; reply_text: string; reply_source: ReplySource; posted_to_google?: boolean; posted_at?: string | null; created_at?: string }
-        Update: { reply_text?: string; reply_source?: ReplySource; posted_to_google?: boolean; posted_at?: string | null }
-        Relationships: []
+        Row: {
+          id: string
+          review_id: string
+          reply_text: string
+          reply_source: ReplySource
+          posted_to_google: boolean
+          posted_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          review_id: string
+          reply_text: string
+          reply_source: ReplySource
+          posted_to_google?: boolean
+          posted_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          reply_text?: string
+          reply_source?: ReplySource
+          posted_to_google?: boolean
+          posted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "replies_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       review_tags: {
-        Row: { id: string; review_id: string; tag: string; created_at: string }
-        Insert: { id?: string; review_id: string; tag: string; created_at?: string }
-        Update: { tag?: string }
-        Relationships: []
+        Row: {
+          id: string
+          review_id: string
+          tag: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          review_id: string
+          tag: string
+          created_at?: string
+        }
+        Update: {
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_tags_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       alerts: {
-        Row: { id: string; business_id: string; branch_id: string | null; review_id: string | null; alert_type: AlertType; sent_via: NotificationChannel | null; is_read: boolean; created_at: string }
-        Insert: { id?: string; business_id: string; branch_id?: string | null; review_id?: string | null; alert_type: AlertType; sent_via?: NotificationChannel | null; is_read?: boolean; created_at?: string }
-        Update: { alert_type?: AlertType; sent_via?: NotificationChannel | null; is_read?: boolean }
-        Relationships: []
+        Row: {
+          id: string
+          business_id: string
+          branch_id: string | null
+          review_id: string | null
+          alert_type: AlertType
+          sent_via: NotificationChannel | null
+          is_read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          business_id: string
+          branch_id?: string | null
+          review_id?: string | null
+          alert_type: AlertType
+          sent_via?: NotificationChannel | null
+          is_read?: boolean
+          created_at?: string
+        }
+        Update: {
+          alert_type?: AlertType
+          sent_via?: NotificationChannel | null
+          is_read?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       ai_summaries: {
-        Row: { id: string; branch_id: string; summary_type: SummaryType; summary_text: string; period_start: string | null; period_end: string | null; created_at: string }
-        Insert: { id?: string; branch_id: string; summary_type: SummaryType; summary_text: string; period_start?: string | null; period_end?: string | null; created_at?: string }
-        Update: { summary_text?: string; period_start?: string | null; period_end?: string | null }
-        Relationships: []
+        Row: {
+          id: string
+          branch_id: string
+          summary_type: SummaryType
+          summary_text: string
+          period_start: string | null
+          period_end: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          branch_id: string
+          summary_type: SummaryType
+          summary_text: string
+          period_start?: string | null
+          period_end?: string | null
+          created_at?: string
+        }
+        Update: {
+          summary_text?: string
+          period_start?: string | null
+          period_end?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_summaries_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       team_invitations: {
-        Row: { id: string; business_id: string; email: string; role: UserRole; invited_by: string | null; token: string; accepted: boolean; expires_at: string; created_at: string }
-        Insert: { id?: string; business_id: string; email: string; role: UserRole; invited_by?: string | null; token?: string; accepted?: boolean; expires_at?: string; created_at?: string }
-        Update: { role?: UserRole; accepted?: boolean; expires_at?: string }
-        Relationships: []
+        Row: {
+          id: string
+          business_id: string
+          email: string
+          role: UserRole
+          invited_by: string | null
+          token: string
+          accepted: boolean
+          expires_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          business_id: string
+          email: string
+          role: UserRole
+          invited_by?: string | null
+          token?: string
+          accepted?: boolean
+          expires_at?: string
+          created_at?: string
+        }
+        Update: {
+          role?: UserRole
+          accepted?: boolean
+          expires_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invitations_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       sync_logs: {
-        Row: { id: string; business_id: string; branch_id: string | null; status: string; reviews_fetched: number; reviews_inserted: number; error_message: string | null; started_at: string; completed_at: string | null }
-        Insert: { id?: string; business_id: string; branch_id?: string | null; status: string; reviews_fetched?: number; reviews_inserted?: number; error_message?: string | null; started_at?: string; completed_at?: string | null }
-        Update: { status?: string; reviews_fetched?: number; reviews_inserted?: number; error_message?: string | null; completed_at?: string | null }
-        Relationships: []
+        Row: {
+          id: string
+          business_id: string
+          branch_id: string | null
+          status: string
+          reviews_fetched: number
+          reviews_inserted: number
+          error_message: string | null
+          started_at: string
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          business_id: string
+          branch_id?: string | null
+          status: string
+          reviews_fetched?: number
+          reviews_inserted?: number
+          error_message?: string | null
+          started_at?: string
+          completed_at?: string | null
+        }
+        Update: {
+          status?: string
+          reviews_fetched?: number
+          reviews_inserted?: number
+          error_message?: string | null
+          completed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sync_logs_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sync_logs_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
       branch_stats: {
-        Row: { branch_id: string; branch_name: string; business_id: string; total_reviews: number; avg_rating: number; negative_count: number; positive_count: number; negative_percentage: number; last_review_date: string | null }
+        Row: {
+          branch_id: string
+          branch_name: string
+          business_id: string
+          total_reviews: number
+          avg_rating: number
+          negative_count: number
+          positive_count: number
+          negative_percentage: number
+          last_review_date: string | null
+        }
         Relationships: []
       }
     }
     Functions: {
       get_user_business_id: { Args: Record<PropertyKey, never>; Returns: string }
       get_user_role: { Args: Record<PropertyKey, never>; Returns: UserRole }
-      get_branch_stats_for_user: { Args: Record<PropertyKey, never>; Returns: Database['public']['Views']['branch_stats']['Row'][] }
+      get_branch_stats_for_user: {
+        Args: Record<PropertyKey, never>
+        Returns: Database['public']['Views']['branch_stats']['Row'][]
+      }
     }
     Enums: {}
     CompositeTypes: {}

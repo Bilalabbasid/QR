@@ -17,37 +17,50 @@ export default async function InsightsPage() {
 
     if (!userData?.business_id) redirect('/onboarding')
 
-    const { data: branches } = await supabase.from('branches').select('id').eq('business_id', userData.business_id)
-    const branchIds = branches?.map(b => b.id) || []
+    const { data: branches } = await supabase
+        .from('branches')
+        .select('id')
+        .eq('business_id', userData.business_id)
 
+    const branchIds = branches?.map(b => b.id) ?? []
+
+    // Fetch reviews with id included so we can join to review_tags
     const { data: reviews } = await supabase
         .from('reviews')
-        .select('sentiment, rating')
-        .in('branch_id', branchIds)
+        .select('id, sentiment, rating')
+        .in('branch_id', branchIds.length > 0 ? branchIds : ['00000000-0000-0000-0000-000000000000'])
 
-    const { data: tags } = await supabase
-        .from('review_tags')
-        .select('tag')
-        .in('review_id', reviews?.map(r => r.id) || [])
+    const reviewIds = reviews?.map(r => r.id) ?? []
+
+    const { data: tags } = reviewIds.length > 0
+        ? await supabase
+            .from('review_tags')
+            .select('tag')
+            .in('review_id', reviewIds)
+        : { data: [] }
 
     const sentiments = {
-        positive: reviews?.filter(r => r.sentiment === 'positive').length || 0,
-        neutral: reviews?.filter(r => r.sentiment === 'neutral').length || 0,
-        negative: reviews?.filter(r => r.sentiment === 'negative').length || 0,
+        positive: reviews?.filter(r => r.sentiment === 'positive').length ?? 0,
+        neutral:  reviews?.filter(r => r.sentiment === 'neutral').length  ?? 0,
+        negative: reviews?.filter(r => r.sentiment === 'negative').length ?? 0,
     }
+
+    const total = (reviews?.length ?? 0) || 1
 
     const tagCounts: Record<string, number> = {}
     tags?.forEach(t => {
-        tagCounts[t.tag] = (tagCounts[t.tag] || 0) + 1
+        tagCounts[t.tag] = (tagCounts[t.tag] ?? 0) + 1
     })
-    const sortedTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 10)
+    const sortedTags = Object.entries(tagCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
 
     return (
         <div className="p-6 space-y-6">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">AI Insights</h1>
                 <p className="text-muted-foreground">
-                    Deep dive into the customer sentiment and key topics mentioned in your reviews.
+                    Deep dive into customer sentiment and key topics across your reviews.
                 </p>
             </div>
 
@@ -65,12 +78,12 @@ export default async function InsightsPage() {
                             <span className="flex items-center gap-2 text-emerald-500 font-medium">
                                 <ThumbsUp className="h-4 w-4" /> Positive
                             </span>
-                            <span>{sentiments.positive}</span>
+                            <span className="font-semibold">{sentiments.positive}</span>
                         </div>
                         <div className="w-full bg-secondary rounded-full h-2">
                             <div
-                                className="bg-emerald-500 h-2 rounded-full"
-                                style={{ width: `${(sentiments.positive / (reviews?.length || 1)) * 100}%` }}
+                                className="bg-emerald-500 h-2 rounded-full transition-all"
+                                style={{ width: `${(sentiments.positive / total) * 100}%` }}
                             />
                         </div>
 
@@ -78,12 +91,12 @@ export default async function InsightsPage() {
                             <span className="flex items-center gap-2 text-muted-foreground font-medium">
                                 <MessageCircle className="h-4 w-4" /> Neutral
                             </span>
-                            <span>{sentiments.neutral}</span>
+                            <span className="font-semibold">{sentiments.neutral}</span>
                         </div>
                         <div className="w-full bg-secondary rounded-full h-2">
                             <div
-                                className="bg-muted-foreground h-2 rounded-full"
-                                style={{ width: `${(sentiments.neutral / (reviews?.length || 1)) * 100}%` }}
+                                className="bg-slate-400 h-2 rounded-full transition-all"
+                                style={{ width: `${(sentiments.neutral / total) * 100}%` }}
                             />
                         </div>
 
@@ -91,14 +104,18 @@ export default async function InsightsPage() {
                             <span className="flex items-center gap-2 text-destructive font-medium">
                                 <ThumbsDown className="h-4 w-4" /> Negative
                             </span>
-                            <span>{sentiments.negative}</span>
+                            <span className="font-semibold">{sentiments.negative}</span>
                         </div>
                         <div className="w-full bg-secondary rounded-full h-2">
                             <div
-                                className="bg-destructive h-2 rounded-full"
-                                style={{ width: `${(sentiments.negative / (reviews?.length || 1)) * 100}%` }}
+                                className="bg-destructive h-2 rounded-full transition-all"
+                                style={{ width: `${(sentiments.negative / total) * 100}%` }}
                             />
                         </div>
+
+                        <p className="text-xs text-muted-foreground pt-2 border-t border-border">
+                            Based on {reviews?.length ?? 0} reviews
+                        </p>
                     </CardContent>
                 </Card>
 
@@ -108,12 +125,15 @@ export default async function InsightsPage() {
                             <TrendingUp className="h-5 w-5 text-primary" />
                             Trending Topics
                         </CardTitle>
-                        <CardDescription>What customers are talking about most</CardDescription>
+                        <CardDescription>What customers mention most</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="flex flex-wrap gap-3">
                             {sortedTags.map(([tag, count]) => (
-                                <div key={tag} className="flex flex-col items-center p-4 border border-border rounded-xl min-w-[120px] bg-secondary/30">
+                                <div
+                                    key={tag}
+                                    className="flex flex-col items-center p-4 border border-border rounded-xl min-w-[120px] bg-secondary/30"
+                                >
                                     <span className="text-sm font-semibold capitalize">{tag}</span>
                                     <span className="text-2xl font-bold text-primary">{count}</span>
                                     <span className="text-xs text-muted-foreground">mentions</span>
@@ -121,7 +141,7 @@ export default async function InsightsPage() {
                             ))}
                             {sortedTags.length === 0 && (
                                 <p className="text-center text-muted-foreground italic w-full py-8">
-                                    Not enough data yet to identify common topics.
+                                    Not enough data yet. Topics appear once reviews are synced and analyzed.
                                 </p>
                             )}
                         </div>

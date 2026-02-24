@@ -86,7 +86,7 @@ export function ReplyModal({ review, open, onClose, onReplied }: ReplyModalProps
             {review.review_text ?? <em className="text-slate-400">No review text</em>}
           </p>
           <div className="text-xs text-slate-400">
-            {review.branch?.name} · {new Date(review.review_time).toLocaleDateString()}
+            {review.branches?.name} · {new Date(review.review_time).toLocaleDateString()}
           </div>
         </div>
 

@@ -1,9 +1,8 @@
 import { createAdminClient } from '@/lib/supabase/server'
 
-export async function getValidAccessToken(businessId: string) {
+export async function getValidAccessToken(businessId: string): Promise<string> {
     const supabase = createAdminClient()
 
-    // 1. Fetch token from DB
     const { data: tokenData, error } = await supabase
         .from('google_tokens')
         .select('*')
@@ -11,18 +10,18 @@ export async function getValidAccessToken(businessId: string) {
         .single()
 
     if (error || !tokenData) {
-        throw new Error('Google account not connected')
+        throw new Error('Google account not connected for this business')
     }
 
-    // 2. Check if expired (with 1 minute buffer)
-    const now = new Date()
-    const expiry = new Date(tokenData.expiry_date)
+    // Return current token if it has more than 1 minute remaining
+    const now = Date.now()
+    const expiry = new Date(tokenData.expiry_date).getTime()
 
-    if (expiry.getTime() - now.getTime() > 60 * 1000) {
+    if (expiry - now > 60_000) {
         return tokenData.access_token
     }
 
-    // 3. Refresh token
+    // Token expired — refresh it
     const response = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -38,15 +37,39 @@ export async function getValidAccessToken(businessId: string) {
 
     if (!response.ok) {
         console.error('Token refresh failed:', newTokens)
-        throw new Error('Failed to refresh Google token')
+
+        // Refresh token was revoked by the user — clear the token row
+        if (newTokens.error === 'invalid_grant') {
+            await supabase
+                .from('google_tokens')
+                .delete()
+                .eq('business_id', businessId)
+
+            // Alert the business owner
+            try {
+                await supabase.from('alerts').insert({
+                    business_id: businessId,
+                    alert_type: 'spike_detected', // Closest available type for auth issues
+                })
+            } catch {
+                // ignore alert insertion failure
+            }
+        }
+
+        throw new Error(
+            newTokens.error === 'invalid_grant'
+                ? 'Google access has been revoked. Please reconnect your account in Settings.'
+                : `Failed to refresh Google token: ${newTokens.error_description ?? 'Unknown error'}`
+        )
     }
 
-    // 4. Update DB
+    const newExpiry = new Date(Date.now() + newTokens.expires_in * 1000).toISOString()
+
     const { error: updateError } = await supabase
         .from('google_tokens')
         .update({
             access_token: newTokens.access_token,
-            expiry_date: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
+            expiry_date: newExpiry,
         })
         .eq('business_id', businessId)
 

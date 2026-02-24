@@ -1,5 +1,10 @@
 import { createAdminClient } from '@/lib/supabase/server'
 import { analyzeReview } from '@/lib/ai/analyze'
+import type { SentimentType } from '@/types/database'
+
+const STAR_MAP: Record<string, number> = {
+    FIVE: 5, FOUR: 4, THREE: 3, TWO: 2, ONE: 1,
+}
 
 export async function fetchBranchReviews(
     businessId: string,
@@ -22,70 +27,74 @@ export async function fetchBranchReviews(
         const data = await response.json()
 
         if (!response.ok) {
-            console.error(`Failed to fetch reviews for branch ${branchId}:`, data)
-            throw new Error(`Google API Error: ${data.error?.message || 'Unknown error'}`)
+            // 404 → branch removed from Google; mark inactive
+            if (response.status === 404) {
+                await supabase
+                    .from('branches')
+                    .update({ is_active: false })
+                    .eq('id', branchId)
+                console.warn(`Branch ${branchId} not found on Google — marked inactive`)
+                break
+            }
+            // 429 → rate limit; abort this branch
+            if (response.status === 429) {
+                console.warn(`Rate limited fetching reviews for branch ${branchId}`)
+                break
+            }
+            throw new Error(`Google API Error: ${data.error?.message ?? 'Unknown error'}`)
         }
 
-        const googleReviews = data.reviews || []
+        const googleReviews: Record<string, unknown>[] = data.reviews ?? []
         reviewsFetched += googleReviews.length
 
         for (const review of googleReviews) {
-            // 1. Check if review already exists
-            const { data: existingReview } = await supabase
-                .from('reviews')
-                .select('id')
-                .eq('google_review_id', review.reviewId)
-                .single()
+            const googleReviewId = review.reviewId as string
 
-            if (existingReview) continue
-
-            // 2. Insert new review
+            // Deduplication: ON CONFLICT handled by UNIQUE constraint on google_review_id
             const { data: newReview, error: insertError } = await supabase
                 .from('reviews')
                 .insert({
                     branch_id: branchId,
-                    google_review_id: review.reviewId,
-                    reviewer_name: review.reviewer.displayName,
-                    reviewer_profile_photo: review.reviewer.profilePhotoUrl,
-                    rating: review.starRating === 'FIVE' ? 5 :
-                        review.starRating === 'FOUR' ? 4 :
-                            review.starRating === 'THREE' ? 3 :
-                                review.starRating === 'TWO' ? 2 : 1,
-                    review_text: review.comment,
-                    review_time: review.createTime,
+                    google_review_id: googleReviewId,
+                    google_review_name: review.name as string ?? null,
+                    reviewer_name: (review.reviewer as Record<string, string>)?.displayName ?? 'Anonymous',
+                    reviewer_profile_photo: (review.reviewer as Record<string, string>)?.profilePhotoUrl ?? null,
+                    rating: STAR_MAP[(review.starRating as string)?.toUpperCase()] ?? 3,
+                    review_text: review.comment as string ?? null,
+                    review_time: review.createTime as string,
+                    reply_status: 'not_replied',
                 })
                 .select()
                 .single()
 
             if (insertError) {
+                // Unique violation = duplicate → skip silently
+                if (insertError.code === '23505') continue
                 console.error('Failed to insert review:', insertError)
                 continue
             }
 
             reviewsInserted++
 
-            // 3. Trigger AI Analysis
+            // AI analysis
             try {
-                const aiResult = await analyzeReview(review.comment || '')
+                const aiResult = await analyzeReview((review.comment as string) ?? '')
 
                 await supabase
                     .from('reviews')
                     .update({
-                        sentiment: aiResult.sentiment,
+                        sentiment: aiResult.sentiment as SentimentType,
                         ai_suggested_reply: aiResult.suggestedReply,
                     })
                     .eq('id', newReview.id)
 
-                // Store tags
-                if (aiResult.tags && aiResult.tags.length > 0) {
-                    const tagInserts = aiResult.tags.map((tag: string) => ({
-                        review_id: newReview.id,
-                        tag: tag,
-                    }))
-                    await supabase.from('review_tags').insert(tagInserts)
+                if (aiResult.tags.length > 0) {
+                    await supabase.from('review_tags').insert(
+                        aiResult.tags.map((tag) => ({ review_id: newReview.id, tag }))
+                    )
                 }
 
-                // 4. Create alert for low ratings
+                // Alert for low-rated reviews
                 if (newReview.rating <= 2) {
                     await supabase.from('alerts').insert({
                         business_id: businessId,
@@ -95,38 +104,12 @@ export async function fetchBranchReviews(
                     })
                 }
             } catch (aiError) {
-                console.error(`AI Analysis failed for review ${newReview.id}:`, aiError)
+                console.error(`AI analysis failed for review ${newReview.id}:`, aiError)
             }
         }
 
-        nextPageToken = data.nextPageToken
+        nextPageToken = (data.nextPageToken as string) ?? ''
     } while (nextPageToken)
 
     return { reviewsFetched, reviewsInserted }
-}
-
-export async function postReplyToGoogle(
-    businessId: string,
-    googleReviewName: string,
-    replyText: string
-) {
-    const { getValidAccessToken } = await import('@/lib/google/token')
-    const accessToken = await getValidAccessToken(businessId)
-
-    const url = `https://mybusiness.googleapis.com/v1/${googleReviewName}/reply`
-    const response = await fetch(url, {
-        method: 'PUT',
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ comment: replyText }),
-    })
-
-    if (!response.ok) {
-        const err = await response.json()
-        throw new Error(`Google API Error: ${err.error?.message ?? 'Unknown error'}`)
-    }
-
-    return await response.json()
 }

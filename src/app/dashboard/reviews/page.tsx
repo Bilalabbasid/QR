@@ -51,7 +51,7 @@ export default async function ReviewsPage({
 
   if (selectedBranch)    query = query.eq('branch_id', selectedBranch)
   if (selectedRating)    query = query.eq('rating', parseInt(selectedRating))
-  if (selectedSentiment) query = query.eq('sentiment', selectedSentiment)
+  if (selectedSentiment) query = query.eq('sentiment', selectedSentiment as 'positive' | 'neutral' | 'negative')
   if (cursor)            query = query.lt('review_time', cursor)
 
   const { data: reviewsRaw, error } = await query

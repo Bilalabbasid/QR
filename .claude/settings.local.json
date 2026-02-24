@@ -6,7 +6,12 @@
       "Bash(cd \"C:\\\\Users\\\\hp\\\\Desktop\\\\QR\\\\QR\" && set -a && source .env && set +a && supabase db push --db-url \"$DATABASE_URL\" 2>&1)",
       "Bash(cd \"C:\\\\Users\\\\hp\\\\Desktop\\\\QR\\\\QR\" && set -a && source .env && set +a && curl -s \\\\\n  \"${NEXT_PUBLIC_SUPABASE_URL}/rest/v1/businesses?select=id,name,google_account_id&limit=0\" \\\\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\\\n  -w \"\\\\nHTTP %{http_code}\" && echo \"\" && \\\\\n  curl -s \\\\\n  \"${NEXT_PUBLIC_SUPABASE_URL}/rest/v1/branches?select=id,name,google_location_id&limit=0\" \\\\\n  -H \"apikey: ${SUPABASE_SERVICE_ROLE_KEY}\" \\\\\n  -H \"Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}\" \\\\\n  -w \"\\\\nHTTP %{http_code}\" 2>&1)",
       "Bash(cd:*)",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(cd \"C:\\\\Users\\\\Admin\\\\Desktop\\\\QR\\\\QR\" && npx tsc --noEmit 2>&1)",
+      "Bash(echo Removed:*)",
+      "Bash(cd \"C:\\\\Users\\\\Admin\\\\Desktop\\\\QR\\\\QR\" && npm run build 2>&1)",
+      "Bash(tasklist | grep -i \"node\\\\|next\" 2>&1 || tasklist /FI \"IMAGENAME eq node.exe\" 2>&1)"
     ]
   }
 }

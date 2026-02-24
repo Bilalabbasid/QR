@@ -12,12 +12,17 @@ export async function POST(req: NextRequest) {
   const body = await req.text()
   const sig = req.headers.get('stripe-signature') ?? ''
 
+  if (!webhookSecret) {
+    console.error('[Stripe Webhook] STRIPE_WEBHOOK_SECRET is not set')
+    return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 })
+  }
+
   let event: Stripe.Event
 
   try {
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
   } catch (err) {
-    console.error('[Stripe Webhook] signature verification failed:', err)
+    console.error('[Stripe Webhook] Signature verification failed:', err)
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
@@ -26,17 +31,22 @@ export async function POST(req: NextRequest) {
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.CheckoutSession
+        const session = event.data.object as Stripe.Checkout.Session
         const businessId = session.metadata?.business_id
-        if (!businessId) break
+        if (!businessId) {
+          console.warn('[Stripe Webhook] checkout.session.completed missing business_id in metadata')
+          break
+        }
+
+        const lookupKey = session.metadata?.plan ?? 'starter'
 
         await supabase
           .from('businesses')
           .update({
-            subscription_plan: 'pro',
+            subscription_plan: lookupKey as 'starter' | 'pro' | 'professional',
+            subscription_status: 'active',
             stripe_customer_id: session.customer as string,
             stripe_subscription_id: session.subscription as string,
-            subscription_status: 'active',
           })
           .eq('id', businessId)
         break
@@ -46,14 +56,13 @@ export async function POST(req: NextRequest) {
         const sub = event.data.object as Stripe.Subscription
         const customerId = sub.customer as string
 
-        const plan = sub.items.data[0]?.price?.lookup_key ?? 'pro'
-        const status = sub.status
+        const lookupKey = sub.items.data[0]?.price?.lookup_key ?? 'starter'
 
         await supabase
           .from('businesses')
           .update({
-            subscription_plan: plan,
-            subscription_status: status,
+            subscription_plan: lookupKey as 'starter' | 'pro' | 'professional',
+            subscription_status: sub.status as 'active' | 'trialing' | 'past_due' | 'canceled',
             stripe_subscription_id: sub.id,
           })
           .eq('stripe_customer_id', customerId)
@@ -85,14 +94,24 @@ export async function POST(req: NextRequest) {
         break
       }
 
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object as Stripe.Invoice
+        const customerId = invoice.customer as string
+
+        await supabase
+          .from('businesses')
+          .update({ subscription_status: 'active' })
+          .eq('stripe_customer_id', customerId)
+        break
+      }
+
       default:
-        // unhandled event type — ignore
         break
     }
 
     return NextResponse.json({ received: true })
   } catch (err) {
-    console.error('[Stripe Webhook] handler error:', err)
+    console.error('[Stripe Webhook] Handler error:', err)
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
   }
 }

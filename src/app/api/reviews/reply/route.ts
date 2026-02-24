@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { postReplyToGoogle } from '@/lib/google/reviews'
+import { postReplyToGoogle } from '@/lib/ai/post-reply'
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     // Get review + branch + google name
     const { data: review } = await supabase
       .from('reviews')
-      .select('google_review_name, branch_id, branches!inner(business_id, google_location_id)')
+      .select('google_review_id, google_review_name, branch_id, branches!inner(business_id, google_location_id)')
       .eq('id', reviewId)
       .single()
 
@@ -37,7 +37,8 @@ export async function POST(req: NextRequest) {
     // Post to Google if credentials exist
     let postedToGoogle = false
     try {
-      await postReplyToGoogle(userData.business_id, review.google_review_name, replyText)
+      const locationId = (review.branches as { google_location_id: string | null }).google_location_id ?? ''
+      await postReplyToGoogle(userData.business_id, locationId, review.google_review_id, replyText)
       postedToGoogle = true
     } catch (googleErr) {
       console.error('Google reply failed:', googleErr)

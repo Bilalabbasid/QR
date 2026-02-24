@@ -5,73 +5,121 @@ export const getBusinessStats = unstable_cache(
     async (businessId: string) => {
         const supabase = createClient()
 
-        // 1. Get all reviews for this business
-        const { data: reviews, error } = await supabase
+        // Use the branch_stats view — pre-aggregated, indexed
+        const { data: branchStats, error } = await supabase
             .from('branch_stats')
             .select('*')
             .eq('business_id', businessId)
 
         if (error) throw error
 
-        const totalReviews = reviews.reduce((acc, curr) => acc + (curr.total_reviews || 0), 0)
-        const avgRating = reviews.length > 0
-            ? reviews.reduce((acc, curr) => acc + (Number(curr.avg_rating) || 0), 0) / reviews.length
+        const totalReviews = branchStats?.reduce(
+            (acc, curr) => acc + (curr.total_reviews ?? 0),
+            0
+        ) ?? 0
+
+        const avgRating = branchStats && branchStats.length > 0
+            ? branchStats.reduce((acc, curr) => acc + (Number(curr.avg_rating) ?? 0), 0) / branchStats.length
             : 0
 
-        // 2. Get monthly trend (simplified for now)
+        // Reviews in the last 30 days — scoped to this business via branch join
         const thirtyDaysAgo = new Date()
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-        const { count: newReviews } = await supabase
-            .from('reviews')
-            .select('*', { count: 'exact', head: true })
-            .gte('review_time', thirtyDaysAgo.toISOString())
+        const branchIds = branchStats?.map(b => b.branch_id) ?? []
 
-        // 3. Positive sentiment count
-        const { count: positiveReviews } = await supabase
-            .from('reviews')
-            .select('*', { count: 'exact', head: true })
-            .eq('sentiment', 'positive')
+        const { count: newReviews } = branchIds.length > 0
+            ? await supabase
+                .from('reviews')
+                .select('*', { count: 'exact', head: true })
+                .in('branch_id', branchIds)
+                .gte('review_time', thirtyDaysAgo.toISOString())
+            : { count: 0 }
 
-        const positivePercent = totalReviews > 0
-            ? Math.round(((positiveReviews || 0) / totalReviews) * 100)
+        // Negative count from branch_stats view (reviews with rating ≤ 2)
+        const negativeCount = branchStats?.reduce(
+            (acc, curr) => acc + (curr.negative_count ?? 0),
+            0
+        ) ?? 0
+
+        const negativePercent = totalReviews > 0
+            ? Math.round((negativeCount / totalReviews) * 100)
             : 0
 
         return {
             totalReviews,
             avgRating: avgRating.toFixed(1),
-            newReviews: newReviews || 0,
-            positivePercent,
+            newReviews: newReviews ?? 0,
+            negativePercent,
         }
     },
     ['business-stats'],
-    { revalidate: 3600, tags: ['stats'] }
+    { revalidate: 60, tags: ['stats'] }
 )
 
-export async function getAIInsights(businessId: string) {
+export async function getMonthlyReviewTrend(businessId: string) {
     const supabase = createClient()
 
-    // 1. Sentiment Distribution
-    const { data: sentimentData } = await supabase
+    const { data: branches } = await supabase
+        .from('branches')
+        .select('id')
+        .eq('business_id', businessId)
+
+    const branchIds = branches?.map(b => b.id) ?? []
+    if (branchIds.length === 0) return []
+
+    // Build 12-month trend from reviews table
+    const twelveMonthsAgo = new Date()
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11)
+    twelveMonthsAgo.setDate(1)
+
+    const { data: reviews } = await supabase
         .from('reviews')
-        .select('sentiment, count', { count: 'exact' })
-        .eq('branches.business_id', businessId)
-    // .innerJoin('branches', 'reviews.branch_id', 'branches.id')
-    // Note: Supabase JS select with inner join is tricky, easier to query reviews and filter by branch set
+        .select('review_time, rating')
+        .in('branch_id', branchIds)
+        .gte('review_time', twelveMonthsAgo.toISOString())
+        .order('review_time', { ascending: true })
 
-    // Alternative: Get branch IDs first
-    const { data: branches } = await supabase.from('branches').select('id').eq('business_id', businessId)
-    const branchIds = branches?.map((b: { id: string }) => b.id) || []
+    // Group by month
+    const monthMap: Record<string, { count: number; totalRating: number }> = {}
 
-    const { data: sentimentCounts } = await supabase
-        .rpc('get_sentiment_distribution', { branch_ids: branchIds })
+    reviews?.forEach(r => {
+        const d = new Date(r.review_time)
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+        if (!monthMap[key]) monthMap[key] = { count: 0, totalRating: 0 }
+        monthMap[key].count++
+        monthMap[key].totalRating += r.rating
+    })
 
-    // 2. Top Tags
-    const { data: topTags } = await supabase
-        .rpc('get_top_review_tags', { branch_ids: branchIds, tag_limit: 10 })
+    return Object.entries(monthMap)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([month, { count, totalRating }]) => ({
+            month,
+            count,
+            avgRating: count > 0 ? Number((totalRating / count).toFixed(1)) : 0,
+        }))
+}
 
-    return {
-        sentimentDistribution: sentimentCounts || [],
-        topTags: topTags || [],
-    }
+export async function getRatingDistribution(businessId: string) {
+    const supabase = createClient()
+
+    const { data: branches } = await supabase
+        .from('branches')
+        .select('id')
+        .eq('business_id', businessId)
+
+    const branchIds = branches?.map(b => b.id) ?? []
+    if (branchIds.length === 0) return []
+
+    const { data: reviews } = await supabase
+        .from('reviews')
+        .select('rating')
+        .in('branch_id', branchIds)
+
+    const dist = [1, 2, 3, 4, 5].map(star => ({
+        rating: star,
+        count: reviews?.filter(r => r.rating === star).length ?? 0,
+    }))
+
+    return dist
 }

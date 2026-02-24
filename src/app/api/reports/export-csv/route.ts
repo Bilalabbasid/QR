@@ -26,8 +26,9 @@ export async function GET(req: NextRequest) {
       .from('reviews')
       .select(`
         id, reviewer_name, rating, review_text, review_date,
-        sentiment, tags, reply_status, created_at,
-        branches!inner(name, business_id)
+        sentiment, reply_status, created_at,
+        branches!inner(name, business_id),
+        review_tags(tag)
       `)
       .eq('branches.business_id', userData.business_id)
       .order('review_date', { ascending: false })
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
       `"${(r.review_text ?? '').replace(/"/g, '""')}"`,
       r.review_date,
       r.sentiment ?? '',
-      `"${(r.tags ?? []).join(', ')}"`,
+      `"${((r.review_tags as { tag: string }[] | null ?? []).map(t => t.tag).join(', '))}"`,
       r.reply_status ?? '',
       `"${((r.branches as { name: string }).name ?? '').replace(/"/g, '""')}"`,
     ])
