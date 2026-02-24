@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { MapPin, RefreshCw, ExternalLink, Star, MessageSquare, TrendingDown } from 'lucide-react'
+import { MapPin, ExternalLink, Star, MessageSquare, TrendingDown } from 'lucide-react'
+import { SyncAllButton } from '@/components/dashboard/sync-all-button'
 import type { BranchStats } from '@/types/database'
 
 export default async function BranchesPage() {
@@ -50,10 +51,7 @@ export default async function BranchesPage() {
                     </p>
                 </div>
                 {['owner', 'manager'].includes(userData.role) && (
-                    <Button variant="outline" className="gap-2">
-                        <RefreshCw className="h-4 w-4" />
-                        Sync All
-                    </Button>
+                    <SyncAllButton />
                 )}
             </div>
 
@@ -91,7 +89,7 @@ export default async function BranchesPage() {
                                     </div>
                                     <div>
                                         <div className="flex items-center justify-center gap-1">
-                                            <MessageSquare className="h-3.5 w-3.5 text-blue-500" />
+                                            <MessageSquare className="h-3.5 w-3.5 text-primary" />
                                             <span className="font-bold text-sm text-foreground">{totalReviews}</span>
                                         </div>
                                         <p className="text-xs text-muted-foreground mt-0.5">Reviews</p>

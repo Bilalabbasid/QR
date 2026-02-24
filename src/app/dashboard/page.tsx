@@ -2,12 +2,23 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { StatsCard } from '@/components/dashboard/stats-card'
 import { getBusinessStats, getMonthlyReviewTrend, getRatingDistribution } from '@/lib/analytics'
-import { Star, MessageSquare, TrendingDown, TrendingUp, MapPin } from 'lucide-react'
+import { Star, MessageSquare, TrendingDown, TrendingUp, MapPin, AlertTriangle, ArrowRight } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 import { RatingBarChart } from '@/components/dashboard/charts/rating-bar-chart'
 import { MonthlyLineChart } from '@/components/dashboard/charts/monthly-line-chart'
 import { BranchTable } from '@/components/dashboard/branch-table'
 import type { BranchStats } from '@/types/database'
+
+type AlertWithDetails = {
+    id: string
+    alert_type: string
+    review_id: string | null
+    reviews: { review_text: string | null; branches: { name: string } | null } | null
+    created_at: string
+}
 
 export const revalidate = 60
 
@@ -25,7 +36,7 @@ export default async function DashboardPage() {
 
     if (!userData?.business_id) redirect('/onboarding')
 
-    const [stats, monthlyTrend, ratingDist, branchStatsResult] = await Promise.all([
+    const [stats, monthlyTrend, ratingDist, branchStatsResult, alertsResult] = await Promise.all([
         getBusinessStats(userData.business_id),
         getMonthlyReviewTrend(userData.business_id),
         getRatingDistribution(userData.business_id),
@@ -35,9 +46,17 @@ export default async function DashboardPage() {
             .eq('business_id', userData.business_id)
             .order('total_reviews', { ascending: false })
             .limit(5),
+        supabase
+            .from('alerts')
+            .select('*, reviews(review_text, branches(name))')
+            .eq('business_id', userData.business_id)
+            .eq('is_read', false)
+            .order('created_at', { ascending: false })
+            .limit(5),
     ])
 
     const topBranches: BranchStats[] = branchStatsResult.data ?? []
+    const recentAlerts = (alertsResult.data ?? []) as unknown as AlertWithDetails[]
 
     const hasBranches = topBranches.length > 0
 
@@ -100,6 +119,48 @@ export default async function DashboardPage() {
                     </Card>
                 </div>
             ) : null}
+
+            {/* Unread Alerts widget */}
+            {recentAlerts.length > 0 && (
+                <Card className="border-l-4 border-l-destructive">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                        <CardTitle className="flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5 text-destructive" />
+                            Unread Alerts
+                            <Badge variant="destructive">{recentAlerts.length}</Badge>
+                        </CardTitle>
+                        <Button variant="ghost" size="sm" asChild>
+                            <Link href="/dashboard/alerts" className="flex items-center gap-1 text-xs">
+                                View all <ArrowRight className="h-3 w-3" />
+                            </Link>
+                        </Button>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        {recentAlerts.map((alert) => (
+                            <div key={alert.id} className="flex items-start justify-between gap-3 py-2 border-b border-border last:border-0">
+                                <div className="min-w-0">
+                                    <p className="text-sm font-medium">
+                                        {alert.alert_type === 'low_rating' ? 'Critical Low Rating' : 'Alert'}
+                                        {alert.reviews?.branches?.name && (
+                                            <span className="text-muted-foreground font-normal"> · {alert.reviews.branches.name}</span>
+                                        )}
+                                    </p>
+                                    {alert.reviews?.review_text && (
+                                        <p className="text-xs text-muted-foreground truncate max-w-[400px] italic mt-0.5">
+                                            &ldquo;{alert.reviews.review_text}&rdquo;
+                                        </p>
+                                    )}
+                                </div>
+                                {alert.review_id && (
+                                    <Button size="sm" variant="outline" className="h-7 text-xs shrink-0" asChild>
+                                        <Link href={`/dashboard/reviews?id=${alert.review_id}`}>Reply</Link>
+                                    </Button>
+                                )}
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Branch comparison table */}
             <Card>

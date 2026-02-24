@@ -40,6 +40,7 @@ export default async function ReviewsPage({
   const selectedRating    = typeof searchParams.rating    === 'string' ? searchParams.rating    : undefined
   const selectedSentiment = typeof searchParams.sentiment === 'string' ? searchParams.sentiment : undefined
   const cursor            = typeof searchParams.cursor    === 'string' ? searchParams.cursor    : undefined
+  const highlightId       = typeof searchParams.id        === 'string' ? searchParams.id        : undefined
 
   // Build query — include branch + replies
   let query = supabase
@@ -62,6 +63,18 @@ export default async function ReviewsPage({
   const nextCursor = hasNextPage ? reviewsRaw![PAGE_SIZE - 1].review_time : null
 
   const canReply = ['owner', 'manager'].includes(userData.role ?? '')
+
+  // If coming from an alert link (?id=...), fetch that specific review to auto-open its modal
+  let autoOpenReview: ReviewWithBranch | null = null
+  if (highlightId) {
+    const { data: found } = await supabase
+      .from('reviews')
+      .select('*, branches!inner(*), replies(*)')
+      .eq('id', highlightId)
+      .eq('branches.business_id', userData.business_id)
+      .single()
+    if (found) autoOpenReview = found as ReviewWithBranch
+  }
 
   const buildUrl = (extra: Record<string, string | undefined>) => {
     const params = new URLSearchParams()
@@ -98,7 +111,7 @@ export default async function ReviewsPage({
       </p>
 
       {/* Table with Reply modal wired in */}
-      <ReviewsTableClient reviews={reviews} canReply={canReply} />
+      <ReviewsTableClient reviews={reviews} canReply={canReply} autoOpenReview={autoOpenReview} />
 
       {/* Pagination */}
       <div className="flex gap-2">

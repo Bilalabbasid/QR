@@ -101,7 +101,7 @@ export default async function BillingPage() {
 
             {/* Payment failed warning */}
             {status === 'past_due' && (
-                <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800">
+                <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400">
                     <AlertCircle className="h-5 w-5 shrink-0" />
                     <p className="text-sm font-medium">
                         Your payment is past due. Please update your payment method to avoid service interruption.

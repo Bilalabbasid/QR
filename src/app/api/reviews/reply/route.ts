@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       // Still save reply locally even if Google post fails
     }
 
-    // Upsert reply record
+    // Upsert reply record — onConflict ensures edit overwrites the existing row
     const { error: upsertError } = await supabase
       .from('replies')
       .upsert({
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
         reply_text: replyText,
         reply_source: 'manual',
         posted_to_google: postedToGoogle,
-      })
+      }, { onConflict: 'review_id' })
 
     if (upsertError) throw upsertError
 

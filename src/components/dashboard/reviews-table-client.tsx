@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,7 @@ import type { ReviewWithBranch } from '@/types/database'
 interface ReviewsTableClientProps {
   reviews: ReviewWithBranch[]
   canReply: boolean
+  autoOpenReview?: ReviewWithBranch | null
 }
 
 function StarRating({ rating }: { rating: number }) {
@@ -86,13 +88,27 @@ function ReviewTextCell({ text, replyText }: { text: string | null; replyText?: 
   )
 }
 
-export function ReviewsTableClient({ reviews, canReply }: ReviewsTableClientProps) {
+export function ReviewsTableClient({ reviews, canReply, autoOpenReview }: ReviewsTableClientProps) {
+  const router = useRouter()
   const [selectedReview, setSelectedReview] = useState<ReviewWithBranch | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+
+  // Auto-open modal when arriving from an alert link (?id=...)
+  useEffect(() => {
+    if (autoOpenReview && canReply) {
+      setSelectedReview(autoOpenReview)
+      setModalOpen(true)
+    }
+  }, [autoOpenReview?.id])
 
   const handleReply = (review: ReviewWithBranch) => {
     setSelectedReview(review)
     setModalOpen(true)
+  }
+
+  const handleReplied = () => {
+    // Re-fetch server component data so badge and reply text update immediately
+    router.refresh()
   }
 
   if (reviews.length === 0) {
@@ -185,6 +201,7 @@ export function ReviewsTableClient({ reviews, canReply }: ReviewsTableClientProp
         review={selectedReview}
         open={modalOpen}
         onClose={() => { setModalOpen(false); setSelectedReview(null) }}
+        onReplied={handleReplied}
       />
     </>
   )

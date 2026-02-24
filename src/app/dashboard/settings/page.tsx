@@ -210,7 +210,7 @@ export default function SettingsPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <Bell className="h-5 w-5 text-amber-500" />
+                                <Bell className="h-5 w-5 text-primary" />
                                 Notification Settings
                             </CardTitle>
                             <CardDescription>How and when you&apos;ll be alerted</CardDescription>
