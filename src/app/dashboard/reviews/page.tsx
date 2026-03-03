@@ -36,24 +36,51 @@ export default async function ReviewsPage({
     .order('name')
 
   // Parse filters from URL
-  const selectedBranch    = typeof searchParams.branch    === 'string' ? searchParams.branch    : undefined
-  const selectedRating    = typeof searchParams.rating    === 'string' ? searchParams.rating    : undefined
+  const selectedBranch = typeof searchParams.branch === 'string' ? searchParams.branch : undefined
+  const selectedRating = typeof searchParams.rating === 'string' ? searchParams.rating : undefined
   const selectedSentiment = typeof searchParams.sentiment === 'string' ? searchParams.sentiment : undefined
-  const cursor            = typeof searchParams.cursor    === 'string' ? searchParams.cursor    : undefined
-  const highlightId       = typeof searchParams.id        === 'string' ? searchParams.id        : undefined
+  const cursor = typeof searchParams.cursor === 'string' ? searchParams.cursor : undefined
+  const highlightId = typeof searchParams.id === 'string' ? searchParams.id : undefined
 
-  // Build query — include branch + replies
+  // Build query — fetch branch IDs first, then filter reviews by them
+  // Note: filtering on joined table columns via .eq('branches.business_id', x) is unreliable in Supabase;
+  // using branch_id IN (branch IDs for this business) is the correct approach.
+  const branchIds = (branches ?? []).map(b => b.id)
+
   let query = supabase
     .from('reviews')
-    .select('*, branches!inner(*), replies(*)')
-    .eq('branches.business_id', userData.business_id)
+    .select('*, branches(*), replies(*)')
     .order('review_time', { ascending: false })
     .limit(PAGE_SIZE + 1)
 
-  if (selectedBranch)    query = query.eq('branch_id', selectedBranch)
-  if (selectedRating)    query = query.eq('rating', parseInt(selectedRating))
+  if (branchIds.length > 0) {
+    query = query.in('branch_id', branchIds)
+  } else {
+    // No branches → return empty
+    const reviews: ReviewWithBranch[] = []
+    const canReply = ['owner', 'manager'].includes(userData.role ?? '')
+    return (
+      <div className="p-6 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Reviews</h1>
+          <p className="text-muted-foreground">
+            Manage and respond to all your Google Business Profile reviews.
+          </p>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          No branches connected yet.{' '}
+          <a href="/dashboard/settings" className="text-primary underline">Connect Google Account</a> to start syncing reviews.
+        </p>
+        <ReviewsTableClient reviews={reviews} canReply={canReply} autoOpenReview={null} />
+      </div>
+    )
+  }
+
+
+  if (selectedBranch) query = query.eq('branch_id', selectedBranch)
+  if (selectedRating) query = query.eq('rating', parseInt(selectedRating))
   if (selectedSentiment) query = query.eq('sentiment', selectedSentiment as 'positive' | 'neutral' | 'negative')
-  if (cursor)            query = query.lt('review_time', cursor)
+  if (cursor) query = query.lt('review_time', cursor)
 
   const { data: reviewsRaw, error } = await query
   if (error) throw error
@@ -66,20 +93,20 @@ export default async function ReviewsPage({
 
   // If coming from an alert link (?id=...), fetch that specific review to auto-open its modal
   let autoOpenReview: ReviewWithBranch | null = null
-  if (highlightId) {
+  if (highlightId && branchIds.length > 0) {
     const { data: found } = await supabase
       .from('reviews')
-      .select('*, branches!inner(*), replies(*)')
+      .select('*, branches(*), replies(*)')
       .eq('id', highlightId)
-      .eq('branches.business_id', userData.business_id)
+      .in('branch_id', branchIds)
       .single()
     if (found) autoOpenReview = found as ReviewWithBranch
   }
 
   const buildUrl = (extra: Record<string, string | undefined>) => {
     const params = new URLSearchParams()
-    if (selectedBranch)    params.set('branch',    selectedBranch)
-    if (selectedRating)    params.set('rating',    selectedRating)
+    if (selectedBranch) params.set('branch', selectedBranch)
+    if (selectedRating) params.set('rating', selectedRating)
     if (selectedSentiment) params.set('sentiment', selectedSentiment)
     Object.entries(extra).forEach(([k, v]) => v ? params.set(k, v) : params.delete(k))
     const qs = params.toString()
@@ -106,7 +133,7 @@ export default async function ReviewsPage({
         {selectedBranch && branches
           ? ` · ${branches.find(b => b.id === selectedBranch)?.name ?? ''}`
           : ''}
-        {selectedRating    ? ` · ${selectedRating}★`    : ''}
+        {selectedRating ? ` · ${selectedRating}★` : ''}
         {selectedSentiment ? ` · ${selectedSentiment}` : ''}
       </p>
 

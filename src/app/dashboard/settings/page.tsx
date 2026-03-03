@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Building2, Bell, Sparkles, Trash2, Loader2 } from 'lucide-react'
+import { Building2, Bell, Sparkles, Trash2, Loader2, RefreshCw } from 'lucide-react'
 import { ConnectGoogleButton } from '@/components/dashboard/connect-google-button'
 import { disconnectGoogle, deleteBusiness } from '@/actions/business'
 import { updateSettings } from '@/actions/settings'
@@ -22,7 +22,9 @@ export default function SettingsPage() {
     const [userData, setUserData] = useState<UserWithBusiness | null>(null)
     const [isGoogleConnected, setIsGoogleConnected] = useState(false)
     const [googleAccountId, setGoogleAccountId] = useState<string | null>(null)
+    const [googleAccountName, setGoogleAccountName] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
+    const [isSyncing, setIsSyncing] = useState(false)
 
     const [businessName, setBusinessName] = useState('')
     const [notificationEmail, setNotificationEmail] = useState('')
@@ -85,6 +87,27 @@ export default function SettingsPage() {
                 })
             }
         })
+    }
+
+    const handleSyncReviews = async () => {
+        setIsSyncing(true)
+        try {
+            const res = await fetch('/api/reviews/sync', { method: 'POST' })
+            const json = await res.json()
+            if (!res.ok) throw new Error(json.error ?? 'Sync failed')
+            toast({
+                title: 'Sync complete',
+                description: `${json.newReviews ?? 0} new review(s) imported.`,
+            })
+        } catch (err: unknown) {
+            toast({
+                title: 'Sync failed',
+                description: err instanceof Error ? err.message : 'Unknown error',
+                variant: 'destructive',
+            })
+        } finally {
+            setIsSyncing(false)
+        }
     }
 
     const handleDeleteBusiness = () => {
@@ -249,11 +272,25 @@ export default function SettingsPage() {
                                 Manage your Google Business Profile authentication
                             </CardDescription>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="space-y-4">
                             <ConnectGoogleButton
                                 isConnected={isGoogleConnected}
                                 googleAccountId={googleAccountId}
+                                googleAccountName={googleAccountName}
                             />
+                            {isGoogleConnected && (
+                                <Button
+                                    variant="outline"
+                                    className="w-full gap-2"
+                                    onClick={handleSyncReviews}
+                                    disabled={isSyncing}
+                                >
+                                    {isSyncing
+                                        ? <Loader2 className="h-4 w-4 animate-spin" />
+                                        : <RefreshCw className="h-4 w-4" />}
+                                    {isSyncing ? 'Syncing reviews...' : 'Sync Reviews Now'}
+                                </Button>
+                            )}
                         </CardContent>
                     </Card>
                 )}

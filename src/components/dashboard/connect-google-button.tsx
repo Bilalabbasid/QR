@@ -7,9 +7,10 @@ import { Badge } from '@/components/ui/badge'
 interface ConnectGoogleButtonProps {
     isConnected: boolean
     googleAccountId?: string | null
+    googleAccountName?: string | null
 }
 
-export function ConnectGoogleButton({ isConnected, googleAccountId }: ConnectGoogleButtonProps) {
+export function ConnectGoogleButton({ isConnected, googleAccountId, googleAccountName }: ConnectGoogleButtonProps) {
     const [loading, setLoading] = useState(false)
 
     function handleConnect() {
@@ -27,8 +28,10 @@ export function ConnectGoogleButton({ isConnected, googleAccountId }: ConnectGoo
                         </div>
                         <div>
                             <p className="text-sm font-semibold">Google Account Connected</p>
-                            {googleAccountId && (
-                                <p className="text-xs text-slate-500 font-mono">{googleAccountId}</p>
+                            {(googleAccountName || googleAccountId) && (
+                                <p className="text-xs text-slate-500 font-medium">
+                                    {googleAccountName ?? googleAccountId}
+                                </p>
                             )}
                             <p className="text-xs text-slate-500">Reviews are syncing automatically</p>
                         </div>

@@ -18,7 +18,7 @@ export async function fetchBranchReviews(
     let reviewsFetched = 0
 
     do {
-        const url = `https://mybusiness.googleapis.com/v1/${googleLocationName}/reviews?pageSize=50${nextPageToken ? `&pageToken=${nextPageToken}` : ''}`
+        const url = `https://mybusiness.googleapis.com/v4/${googleLocationName}/reviews?pageSize=50${nextPageToken ? `&pageToken=${nextPageToken}` : ''}`
 
         const response = await fetch(url, {
             headers: { Authorization: `Bearer ${accessToken}` },
@@ -27,16 +27,16 @@ export async function fetchBranchReviews(
         const data = await response.json()
 
         if (!response.ok) {
-            // 404 → branch removed from Google; mark inactive
+            // 404 - branch removed from Google; mark inactive
             if (response.status === 404) {
                 await supabase
                     .from('branches')
                     .update({ is_active: false })
                     .eq('id', branchId)
-                console.warn(`Branch ${branchId} not found on Google — marked inactive`)
+                console.warn(`Branch ${branchId} not found on Google - marked inactive`)
                 break
             }
-            // 429 → rate limit; abort this branch
+            // 429 - rate limit; abort this branch
             if (response.status === 429) {
                 console.warn(`Rate limited fetching reviews for branch ${branchId}`)
                 break
@@ -49,34 +49,78 @@ export async function fetchBranchReviews(
 
         for (const review of googleReviews) {
             const googleReviewId = review.reviewId as string
+            // Google sends a reviewReply field if the owner has already replied
+            const googleReply = review.reviewReply as Record<string, string> | undefined
+            const hasGoogleReply = !!googleReply?.comment
 
-            // Deduplication: ON CONFLICT handled by UNIQUE constraint on google_review_id
+            // --- Upsert review ---
             const { data: newReview, error: insertError } = await supabase
                 .from('reviews')
                 .insert({
                     branch_id: branchId,
                     google_review_id: googleReviewId,
-                    google_review_name: review.name as string ?? null,
+                    google_review_name: (review.name as string | undefined) ?? null,
                     reviewer_name: (review.reviewer as Record<string, string>)?.displayName ?? 'Anonymous',
                     reviewer_profile_photo: (review.reviewer as Record<string, string>)?.profilePhotoUrl ?? null,
                     rating: STAR_MAP[(review.starRating as string)?.toUpperCase()] ?? 3,
-                    review_text: review.comment as string ?? null,
+                    review_text: (review.comment as string | undefined) ?? null,
                     review_time: review.createTime as string,
-                    reply_status: 'not_replied',
+                    // Reflect any reply made directly on Google
+                    reply_status: hasGoogleReply ? 'manual_replied' : 'not_replied',
                 })
                 .select()
                 .single()
 
             if (insertError) {
-                // Unique violation = duplicate → skip silently
-                if (insertError.code === '23505') continue
+                if (insertError.code === '23505') {
+                    // Duplicate review - but still sync any reply from Google we might be missing
+                    if (hasGoogleReply) {
+                        const { data: existing } = await supabase
+                            .from('reviews')
+                            .select('id, reply_status')
+                            .eq('google_review_id', googleReviewId)
+                            .single()
+
+                        if (existing && existing.reply_status === 'not_replied') {
+                            await supabase.from('replies').upsert(
+                                {
+                                    review_id: existing.id,
+                                    reply_text: googleReply!.comment,
+                                    reply_source: 'manual',
+                                    posted_to_google: true,
+                                    posted_at: googleReply!.updateTime ?? null,
+                                },
+                                { onConflict: 'review_id' }
+                            )
+                            await supabase
+                                .from('reviews')
+                                .update({ reply_status: 'manual_replied' })
+                                .eq('id', existing.id)
+                        }
+                    }
+                    continue
+                }
                 console.error('Failed to insert review:', insertError)
                 continue
             }
 
             reviewsInserted++
 
-            // AI analysis
+            // --- Save Google reply if present ---
+            if (hasGoogleReply) {
+                await supabase.from('replies').upsert(
+                    {
+                        review_id: newReview.id,
+                        reply_text: googleReply!.comment,
+                        reply_source: 'manual',
+                        posted_to_google: true,
+                        posted_at: googleReply!.updateTime ?? null,
+                    },
+                    { onConflict: 'review_id' }
+                )
+            }
+
+            // --- AI analysis (optional: silently skipped when key not configured) ---
             try {
                 const aiResult = await analyzeReview((review.comment as string) ?? '')
 
@@ -104,7 +148,7 @@ export async function fetchBranchReviews(
                     })
                 }
             } catch (aiError) {
-                console.error(`AI analysis failed for review ${newReview.id}:`, aiError)
+                console.error(`AI analysis skipped for review ${newReview.id}:`, aiError)
             }
         }
 
